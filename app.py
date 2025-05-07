@@ -240,7 +240,7 @@ def show_login_page():
                 <div class="header-container">
                     <h1 class="header-text">
                         <span style='color: #c0c0c0;'>KT WIZ</span> 
-                        <span style='color: #333333;'>BATTING ANALYTICS</span> 
+                        <span style='color: #333333;'>PITCHING ANALYTICS</span> 
                         <span style='color: #c0c0c0;'>PAGE[Multiple Choice]</span>
                     </h1>
                 </div>
@@ -264,7 +264,7 @@ def show_login_page():
 
         # Header text
         st.markdown('<div class="header-text">케이티 위즈</div>', unsafe_allow_html=True)
-        st.markdown('<div class="subheader-text">타자 분석페이지에 오신것을 환영합니다.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="subheader-text">투수 분석페이지에 오신것을 환영합니다.</div>', unsafe_allow_html=True)
         
         # Horizontal line
         st.markdown('<hr style="margin: 0px 0;">', unsafe_allow_html=True)
