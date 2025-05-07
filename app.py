@@ -1017,7 +1017,7 @@ def show_main_page():
                         st.markdown(f"<h3 style='text-align: center;'>{available_years[0]}</h3>", unsafe_allow_html=True)
                         latest_year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[0]]
                         latest_year_fig = season_pitched_fig(latest_year_df)
-                        st.plotly_chart(latest_year_fig, use_container_width=True, key=f"season_pitched_{pitcher}_latest")
+                        st.plotly_chart(latest_year_fig, use_container_width=True, key=f"season_location_{pitcher}_latest")
         
                     
                     # 2024 (col2)
@@ -1025,14 +1025,14 @@ def show_main_page():
                         st.markdown(f"<h3 style='text-align: center;'>{available_years[1]}</h3>", unsafe_allow_html=True)
                         previous_year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[1]]
                         previous_year_fig = season_pitched_fig(previous_year_df)
-                        st.plotly_chart(previous_year_fig, use_container_width=True, key=f"season_pitched_{pitcher}_previous")
+                        st.plotly_chart(previous_year_fig, use_container_width=True, key=f"season_location_{pitcher}_previous")
                         
                     # 2023 (col3)
                     with col4:
                         st.markdown(f"<h3 style='text-align: center;'>{available_years[2]}</h3>", unsafe_allow_html=True)
                         third_year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[2]]
                         third_year_fig = season_pitched_fig(third_year_df)
-                        st.plotly_chart(third_year_fig, use_container_width=True, key=f"season_pitched_{pitcher}_third")
+                        st.plotly_chart(third_year_fig, use_container_width=True, key=f"season_location_{pitcher}_third")
                 
                 # 최근 2개 시즌만 있는 경우
                 elif len(available_years) == 2:
@@ -1054,14 +1054,14 @@ def show_main_page():
                         st.write(f"**{available_years[0]}**")
                         latest_year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[0]]
                         latest_year_fig = season_pitched_fig(latest_year_df)
-                        st.plotly_chart(latest_year_fig, use_container_width=True, key=f"season_pitched_{pitcher}_latest")
+                        st.plotly_chart(latest_year_fig, use_container_width=True, key=f"season_location_{pitcher}_latest")
                     
                     # 두 번째 연도 (col2)
                     with col3:
                         st.write(f"**{available_years[1]}**")
                         previous_year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[1]]
                         previous_year_fig = season_pitched_fig(previous_year_df)
-                        st.plotly_chart(previous_year_fig, use_container_width=True, key=f"season_pitched_{pitcher}_previous")
+                        st.plotly_chart(previous_year_fig, use_container_width=True, key=f"season_location_{pitcher}_previous")
                         
                     # 세 번째 열은 비워둠
                     with col4:
@@ -1086,7 +1086,7 @@ def show_main_page():
                         st.write(f"**{year}**")
                         year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == year]
                         year_fig = season_pitched_fig(year_df)
-                        st.plotly_chart(year_fig, use_container_width=True, key=f"season_pitched_{pitcher}")
+                        st.plotly_chart(year_fig, use_container_width=True, key=f"season_location_{pitcher}")
                         
                     # 두 번째, 세 번째 열은 비워둠
                     with col3:
