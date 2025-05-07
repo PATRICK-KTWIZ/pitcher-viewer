@@ -254,7 +254,7 @@ def show_login_page():
         st.markdown("""
         <div class="logo-container" style="padding-top: 100px;">
         """, unsafe_allow_html=True)
-        st.image("ktwiz_emblem.png", width=300)
+        st.image("ktwiz_emblem.png", width=280)
         st.markdown('</div>', unsafe_allow_html=True)
     
     with middle2_col:
