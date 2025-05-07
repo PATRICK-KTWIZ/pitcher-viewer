@@ -458,6 +458,7 @@ def create_pitcher_swing_map_stand(df, pitcher_name, year):
     
     # 모든 subplot에 대한 y축 제목 제거
     swing_scatter_fig.update_yaxes(title_text='')
+    swing_scatter_fig.update_xaxes(title_text='')
     
     # 모든 annotation 업데이트
     for annotation in swing_scatter_fig.layout.annotations:
@@ -587,6 +588,7 @@ def create_pitcher_swing_map(df, pitcher_name, year, ordered_pitches):
     
     # 모든 subplot에 대한 y축 제목 제거
     swing_scatter_fig.update_yaxes(title_text='')
+    swing_scatter_fig.update_xaxes(title_text='')
     
     # 모든 annotation 업데이트
     for annotation in swing_scatter_fig.layout.annotations:
@@ -728,6 +730,7 @@ def pitch_by_pitch_map(dataframe, width_per_batter=400, height=500):
 
         # 모든 subplot에 대한 y축 제목 제거
         pitch_by_pitch_fig.update_yaxes(title_text='')
+        pitch_by_pitch_fig.update_xaxes(title_text='')
         
         # 모든 annotation 업데이트
         for annotation in pitch_by_pitch_fig.layout.annotations:
