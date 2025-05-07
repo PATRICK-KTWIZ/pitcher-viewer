@@ -1244,6 +1244,20 @@ def show_main_page():
                         
                     else:
                         st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
+
+                    st.markdown("""
+                        <div style="text-align: left; font-size: 0.9em;">
+                        <span style="font-weight: bold;">기호 범례:</span> 
+                        파란색: 콜드 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    st.markdown("""
+                        <div style="text-align: left; font-size: 0.9em;">
+                        <span style="font-weight: bold;">색상 범례:</span> 
+                        원: 포심 / 삼각형-아래(역삼각형): 투심 / 삼각형-우측아래: 커터 / 삼각형-우측: 슬라이더 / 삼각형-위: 커브 / 다이아몬드: 체인지업 / 사각형: 스플리터 / 십자가: 스위퍼
+                        </div>
+                        """, unsafe_allow_html=True)
                     
                     # 이전 연도 데이터를 expander에 표시
                     if len(years) > 1:
@@ -1306,7 +1320,21 @@ def show_main_page():
                         create_pitcher_swing_map(current_year_df, pitcher_name, current_year, ordered_pitches)
                         
                     else:
-                        st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
+                    st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
+
+                                        st.markdown("""
+                        <div style="text-align: left; font-size: 0.9em;">
+                        <span style="font-weight: bold;">기호 범례:</span> 
+                        파란색: 콜드 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
+                        </div>
+                        """, unsafe_allow_html=True)
+
+                    st.markdown("""
+                        <div style="text-align: left; font-size: 0.9em;">
+                        <span style="font-weight: bold;">색상 범례:</span> 
+                        원: 포심 / 삼각형-아래(역삼각형): 투심 / 삼각형-우측아래: 커터 / 삼각형-우측: 슬라이더 / 삼각형-위: 커브 / 다이아몬드: 체인지업 / 사각형: 스플리터 / 십자가: 스위퍼
+                        </div>
+                        """, unsafe_allow_html=True)
                     
                     # 이전 연도 데이터를 expander에 표시
                     if len(years) > 1:
@@ -1373,6 +1401,18 @@ def show_main_page():
                             date_str = str(latest_date).split('T')[0]  # 'T' 이후의 시간 부분을 제거
                             st.write(f"### 최신 경기 (날짜: {date_str})")
                             st.write(f"상대팀: {opponent}")
+                            st.markdown("""
+                                <div style="text-align: left; font-size: 0.9em;">
+                                <span style="font-weight: bold;">기호 범례:</span> 
+                                파란색: 콜드 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
+                                </div>
+                                """, unsafe_allow_html=True)
+                            st.markdown("""
+                                <div style="text-align: left; font-size: 0.9em;">
+                                <span style="font-weight: bold;">색상 범례:</span> 
+                                원: 포심 / 삼각형-아래(역삼각형): 투심 / 삼각형-우측아래: 커터 / 삼각형-우측: 슬라이더 / 삼각형-위: 커브 / 다이아몬드: 체인지업 / 사각형: 스플리터 / 십자가: 스위퍼
+                                </div>
+                                """, unsafe_allow_html=True)
                             
                             # 이닝별 그래프 생성 및 표시
                             inning_figures = pitch_by_pitch_map(latest_game_df)
