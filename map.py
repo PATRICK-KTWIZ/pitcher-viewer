@@ -500,7 +500,7 @@ def create_pitcher_swing_map_stand(df, pitcher_name, year):
     swing_scatter_fig.update_yaxes(showline=True, linewidth=1, linecolor='rgba(108,122,137,0.9)', mirror=True)
     
     # 차트 표시
-    st.plotly_chart(swing_scatter_fig, use_container_width=True, key=f"swing_map_{pitcher_name}_{year}")
+    st.plotly_chart(swing_scatter_fig, use_container_width=True, key=f"swing_map_stand_{pitcher_name}_{year}")
 
 
 def create_pitcher_swing_map(df, pitcher_name, year, ordered_pitches):
@@ -629,7 +629,7 @@ def create_pitcher_swing_map(df, pitcher_name, year, ordered_pitches):
     swing_scatter_fig.update_yaxes(showline=True, linewidth=1, linecolor='rgba(108,122,137,0.9)', mirror=True)
     
     # 차트 표시
-    st.plotly_chart(swing_scatter_fig, use_container_width=True, key=f"swing_map_{pitcher_name}_{year}")
+    st.plotly_chart(swing_scatter_fig, use_container_width=True, key=f"swing_map_season_{pitcher_name}_{year}")
 
 
 def pitch_by_pitch_map(dataframe, width_per_batter=400, height=500):
