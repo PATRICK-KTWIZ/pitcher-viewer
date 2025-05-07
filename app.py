@@ -1248,7 +1248,7 @@ def show_main_page():
                     st.markdown("""
                         <div style="text-align: left; font-size: 0.9em;">
                         <span style="font-weight: bold;">기호 범례:</span> 
-                        파란색: 콜드 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
+                        파란색: 콜 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
                         </div>
                         """, unsafe_allow_html=True)
 
@@ -1325,7 +1325,7 @@ def show_main_page():
                     st.markdown("""
                         <div style="text-align: left; font-size: 0.9em;">
                         <span style="font-weight: bold;">기호 범례:</span> 
-                        파란색: 콜드 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
+                        파란색: 콜 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
                         </div>
                         """, unsafe_allow_html=True)
 
@@ -1404,7 +1404,7 @@ def show_main_page():
                             st.markdown("""
                                 <div style="text-align: left; font-size: 0.9em;">
                                 <span style="font-weight: bold;">기호 범례:</span> 
-                                파란색: 콜드 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
+                                파란색: 콜 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
                                 </div>
                                 """, unsafe_allow_html=True)
                             st.markdown("""
