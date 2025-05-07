@@ -1320,9 +1320,9 @@ def show_main_page():
                         create_pitcher_swing_map(current_year_df, pitcher_name, current_year, ordered_pitches)
                         
                     else:
-                    st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
+                        st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
 
-                                        st.markdown("""
+                    st.markdown("""
                         <div style="text-align: left; font-size: 0.9em;">
                         <span style="font-weight: bold;">기호 범례:</span> 
                         파란색: 콜드 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃
