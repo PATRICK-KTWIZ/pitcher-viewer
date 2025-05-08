@@ -922,18 +922,30 @@ def stats_df(merged_base_df):
                                      'o%', 'o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%', 
                                      'inplay_sw', 'weak', 'topped', 'under', 'flare', 'solid_contact', 
                                      'barrel', 'approach', 'plus_lsa4']]
+
+
+    # 퍼센트 표시 열 목록
+    percent_columns = ['inplay_pit', 'z%', 'z_swing%', 'z_con%', 'z_inplay%', 'o%', 'o_swing%', 'o_con%', 
+                      'o_inplay%', 'f_swing%', 'swing%', 'whiff%', 'inplay_sw',
+                      'weak', 'topped', 'under', 'flare', 'solid_contact', 'barrel', 'plus_lsa4']
     
+    # 퍼센트 열 중 타구 품질 지표를 제외한 열에 대해 값을 100배로 변환
+    for col in percent_columns:
+        if col not in ['weak', 'topped', 'under', 'flare', 'solid_contact', 'barrel', 'plus_lsa4']:
+            if col in stats_output_df.columns:
+                stats_output_df[col] = stats_output_df[col] * 100
+                
     # 반올림할 컬럼과 소수점 자릿수 정의
     round_dict = {
-        'pa': 0, 'ab': 0, 'hit': 0, 'walk': 0, 'rel_speed(km)': 1, 'inplay_pit': 3, 
+        'pa': 0, 'ab': 0, 'hit': 0, 'walk': 0, 'strikeout': 0, 'rel_speed(km)': 1, 'inplay_pit': 1, 
         'exit_velocity': 1, 'launch_angleX': 1, 'hit_spin_rate': 0, 'avg': 3, 
-        'obp': 3, 'slg': 3, 'ops': 3, 'z%': 3, 'z_swing%': 3, 'z_con%': 3, 
-        'z_inplay%': 3, 'o%': 3, 'o_swing%': 3, 'o_con%': 3, 'o_inplay%': 3, 
-        'f_swing%': 3, 'swing%': 3, 'whiff%': 3, 'inplay_sw': 3, 'inplay%': 3, 
-        'weak': 3, 'topped': 3, 'under': 3, 'flare': 3, 'solid_contact': 3, 'barrel': 3,
-        'plus_lsa4': 3
+        'obp': 3, 'slg': 3, 'ops': 3, 'z%': 1, 'z_swing%': 1, 'z_con%': 1, 
+        'z_inplay%': 1, 'o%': 1, 'o_swing%': 1, 'o_con%': 1, 'o_inplay%': 1, 
+        'f_swing%': 1, 'swing%': 1, 'whiff%': 1, 'inplay_sw': 1, 'inplay%': 1, 
+        'weak': 1, 'topped': 1, 'under': 1, 'flare': 1, 'solid_contact': 1, 'barrel': 1,
+        'plus_lsa4': 1
     }
-    
+
     # 중복 제거
     round_dict_corrected = {k: v for i, (k, v) in enumerate(round_dict.items()) if k not in list(round_dict.keys())[:i]}
 
@@ -963,7 +975,11 @@ def stats_df(merged_base_df):
                             return "-"  # 변환 실패 시 "-" 표시
                     else:
                         try:
-                            return f"{float(x):.{decimals}f}"  # 소수점 고정 표시
+                            # 퍼센트 컬럼에 % 기호 추가
+                            if column in percent_columns:
+                                return f"{float(x):.{decimals}f}%"  # % 기호 추가
+                            else:
+                                return f"{float(x):.{decimals}f}"  # 소수점 고정 표시
                         except:
                             return "-"  # 변환 실패 시 "-" 표시
                 
