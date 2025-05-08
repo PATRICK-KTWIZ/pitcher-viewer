@@ -937,7 +937,7 @@ def stats_df(merged_base_df):
                 
     # 반올림할 컬럼과 소수점 자릿수 정의
     round_dict = {
-        'pa': 0, 'ab': 0, 'hit': 0, 'walk': 0, 'strikeout': 0, 'rel_speed(km)': 1, 'inplay_pit': 1, 
+        'game_date':0, 'pitname':0,'pa': 0, 'ab': 0, 'hit': 0, 'walk': 0, 'strikeout': 0, 'rel_speed(km)': 1, 'inplay_pit': 1, 
         'exit_velocity': 1, 'launch_angleX': 1, 'hit_spin_rate': 0, 'avg': 3, 
         'obp': 3, 'slg': 3, 'ops': 3, 'z%': 1, 'z_swing%': 1, 'z_con%': 1, 
         'z_inplay%': 1, 'o%': 1, 'o_swing%': 1, 'o_con%': 1, 'o_inplay%': 1, 
