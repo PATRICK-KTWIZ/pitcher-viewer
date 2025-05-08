@@ -917,7 +917,7 @@ def stats_df(merged_base_df):
 
     # 출력할 컬럼 선택
     stats_output_df = merged_base_df[['game_date', 'pitname', 'pa', 'ab', 'hit', 'walk', 'strikeout','rel_speed(km)', 
-                                     'inplay_pit', 'exit_velocity', 'launch_angleX', 'hit_spin_rate', 
+                                     'inplay_pit', 'exit_velocity', 'launch_angleX',  
                                      'avg', 'obp', 'slg', 'ops', 'z%', 'z_swing%', 'z_con%', 'z_inplay%', 
                                      'o%', 'o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%', 
                                      'inplay_sw', 'weak', 'topped', 'under', 'flare', 'solid_contact', 
