@@ -50,7 +50,11 @@ st.markdown("""
         color: black !important;
         width: 100%;
         border-radius: 7px;  /* 모서리 둥글기 */
-        padding: 0.5rem 1rem;  /* 패딩 */
+        padding: 0.8rem 1rem;  /* 상하 패딩 증가 (0.5rem → 0.8rem) */
+        height: 3rem;  /* 버튼 높이 지정 */
+        font-size: 16px;  /* 글자 크기 */
+        margin-bottom: 0px;  /* 버튼 사이 간격 */
+        font-weight: 500;  /* 글자 두께 */
     }
 
     /* 사이드바 selectbox 라벨 색상 변경 (옅은 회색) */
@@ -216,6 +220,9 @@ def LoggedIn_Clicked(userName, password):
         st.session_state['loggedIn'] = False
         st.error("유효하지 않은 ID 또는 패스워드 입니다.")
 
+def reset_selections():
+    st.session_state.selected_players = []
+
 def show_login_page():
 
 
@@ -377,11 +384,18 @@ def show_main_page():
         if 'selected_players' not in st.session_state:
             st.session_state.selected_players = []
 
-        if st.sidebar.button('선수추가'):
-            st.session_state.selected_players.append({'Team': select_team, 'Player Name': select_player, 'League': option, 'ID' : player_id})
+        col1, col2 = st.sidebar.columns(2)
+        
+        with col1:
+            if st.button('선수추가', key="add_player_btn"):
+                st.session_state.selected_players.append({'Team': select_team, 'Player Name': select_player, 'League': option, 'ID': player_id})
+     
+        with col2:
+            if st.button('새로고침', key="refresh_btn"):
+                st.session_state.selected_players = []
 
         selected_player_df = pd.DataFrame()
-        # Display the selected player names
+            # Display the selected player names
         if st.session_state.selected_players:
             st.subheader('Selected Players:')
             for player_info in st.session_state.selected_players:
