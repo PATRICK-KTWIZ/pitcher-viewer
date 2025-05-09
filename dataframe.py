@@ -893,6 +893,8 @@ def stats_df(merged_base_df):
         
     #     numerator = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
     #     merged_base_df.loc[mask_sum, 'plus_lsa4'] = numerator[mask_sum] / merged_base_df.loc[mask_sum, 'sum']
+
+    merged_base_df['plus_lsa4'] = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
     
     # 접근 방식 분류 추가
     kbo_z_swing = 0.654
