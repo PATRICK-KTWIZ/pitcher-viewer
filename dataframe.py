@@ -893,6 +893,8 @@ def stats_df(merged_base_df):
         
     #     numerator = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
     #     merged_base_df.loc[mask_sum, 'plus_lsa4'] = numerator[mask_sum] / merged_base_df.loc[mask_sum, 'sum']
+
+    merged_base_df['plus_las4'] = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
     
     # 접근 방식 분류 추가
     kbo_z_swing = 0.654
@@ -914,8 +916,6 @@ def stats_df(merged_base_df):
         ]
         choicelist = ['Aggressive', 'Selective', 'Non_Selective', 'Passive']
         merged_base_df['approach'] = np.select(condition, choicelist, default='Not Specified')
-
-    merged_base_df['plus_las4'] = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel'] 
 
     # 출력할 컬럼 선택
     stats_output_df = merged_base_df[['game_date', 'pitname', 'pa', 'ab', 'hit', 'walk', 'strikeout','rel_speed(km)', 
