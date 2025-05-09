@@ -893,8 +893,6 @@ def stats_df(merged_base_df):
         
     #     numerator = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
     #     merged_base_df.loc[mask_sum, 'plus_lsa4'] = numerator[mask_sum] / merged_base_df.loc[mask_sum, 'sum']
-
-    merged_base_df['plus_las4'] = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
     
     # 접근 방식 분류 추가
     kbo_z_swing = 0.654
@@ -923,7 +921,7 @@ def stats_df(merged_base_df):
                                      'avg', 'obp', 'slg', 'ops', 'z%', 'z_swing%', 'z_con%', 'z_inplay%', 
                                      'o%', 'o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%', 
                                      'inplay_sw', 'weak', 'topped', 'under', 'flare', 'solid_contact', 
-                                     'barrel', 'approach' 'plus_lsa4']]
+                                     'barrel', 'approach', 'plus_lsa4']]
 
 
     # 퍼센트 표시 열 목록
