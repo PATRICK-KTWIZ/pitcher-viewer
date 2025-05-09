@@ -634,7 +634,7 @@ def create_pitcher_swing_map(df, pitcher_name, year, ordered_pitches):
     st.plotly_chart(swing_scatter_fig, use_container_width=True, key=f"swing_map_season_{pitcher_name}_{year}")
 
 
-def pitch_by_pitch_map(dataframe, width_per_batter=400, height=500):
+def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
     """
     투구 데이터를 이닝별, 타자별로 시각화하는 함수
     
