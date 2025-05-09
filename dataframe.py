@@ -931,9 +931,8 @@ def stats_df(merged_base_df):
     
     # 퍼센트 열 중 타구 품질 지표를 제외한 열에 대해 값을 100배로 변환
     for col in percent_columns:
-        if col not in ['weak', 'topped', 'under', 'flare', 'solid_contact', 'barrel', 'plus_lsa4']:
-            if col in stats_output_df.columns:
-                stats_output_df[col] = stats_output_df[col] * 100
+        if col in stats_output_df.columns:
+            stats_output_df[col] = stats_output_df[col] * 100
                 
     # 반올림할 컬럼과 소수점 자릿수 정의
     round_dict = {
