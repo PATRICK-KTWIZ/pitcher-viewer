@@ -634,7 +634,7 @@ def create_pitcher_swing_map(df, pitcher_name, year, ordered_pitches):
     st.plotly_chart(swing_scatter_fig, use_container_width=True, key=f"swing_map_season_{pitcher_name}_{year}")
 
 
-def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
+def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350, max_width=1000):
     """
     투구 데이터를 이닝별, 타자별로 시각화하는 함수
     
@@ -644,13 +644,15 @@ def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
         투구 데이터가 포함된 데이터프레임
     width_per_batter : int, optional (default=250)
         타자 한 명당 그래프 너비
-    height : int, optional (default=400)
+    height : int, optional (default=350)
         그래프 높이
+    max_width : int, optional (default=1000)
+        최대 표시 너비 (이 값을 초과하면 스크롤바 표시)
     
     Returns:
     --------
     dict
-        이닝별 Plotly 그래프 객체가 저장된 딕셔너리
+        이닝별 Plotly 그래프 객체와 HTML이 저장된 딕셔너리
     """
     sdf = dataframe
     figures = {}  # 이닝별 그래프를 저장할 딕셔너리
@@ -786,7 +788,20 @@ def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
         pitch_by_pitch_fig.update_xaxes(showline=True, linewidth=1, linecolor='rgba(108,122,137,0.9)', mirror=True)
         pitch_by_pitch_fig.update_yaxes(showline=True, linewidth=1, linecolor='rgba(108,122,137,0.9)', mirror=True)
         
-        # 이닝별 그래프를 딕셔너리에 저장
-        figures[i] = pitch_by_pitch_fig
+        # 그래프를 HTML로 변환
+        fig_html = pitch_by_pitch_fig.to_html(full_html=False, include_plotlyjs='cdn')
+        
+        # 스크롤바가 있는 HTML 컨테이너 생성
+        html_with_scroll = f"""
+        <div style="width: {max_width}px; overflow-x: auto; overflow-y: hidden; padding-bottom: 15px;">
+            {fig_html}
+        </div>
+        """
+        
+        # 이닝별 그래프와 HTML을 딕셔너리에 저장
+        figures[i] = {
+            'fig': pitch_by_pitch_fig,
+            'html': html_with_scroll
+        }
     
     return figures
