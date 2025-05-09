@@ -642,9 +642,9 @@ def pitch_by_pitch_map(dataframe, width_per_batter=400, height=500):
     -----------
     dataframe : DataFrame
         투구 데이터가 포함된 데이터프레임
-    width_per_batter : int, optional (default=300)
+    width_per_batter : int, optional (default=250)
         타자 한 명당 그래프 너비
-    height : int, optional (default=500)
+    height : int, optional (default=400)
         그래프 높이
     
     Returns:
