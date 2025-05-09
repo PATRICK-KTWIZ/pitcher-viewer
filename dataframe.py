@@ -882,17 +882,17 @@ def stats_df(merged_base_df):
         merged_base_df.loc[mask_swing, 'whiff%'] = merged_base_df.loc[mask_swing, 'whiff'] / merged_base_df.loc[mask_swing, 'swing']
         merged_base_df.loc[mask_swing, 'inplay_sw'] = merged_base_df.loc[mask_swing, 'inplay'] / merged_base_df.loc[mask_swing, 'swing']
     
-    # 타구 품질 관련 통계 (안전한 나눗셈)
-    merged_base_df['sum'] = merged_base_df['weak'] + merged_base_df['topped'] + merged_base_df['under'] + \
-                           merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
+    # # 타구 품질 관련 통계 (안전한 나눗셈)
+    # merged_base_df['sum'] = merged_base_df['weak'] + merged_base_df['topped'] + merged_base_df['under'] + \
+    #                        merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
     
-    mask_sum = merged_base_df['sum'] > 0
-    if mask_sum.any():
-        for col in ['weak', 'topped', 'under', 'flare', 'solid_contact', 'barrel']:
-            merged_base_df.loc[mask_sum, col] = merged_base_df.loc[mask_sum, col] / merged_base_df.loc[mask_sum, 'sum']
+    # mask_sum = merged_base_df['sum'] > 0
+    # if mask_sum.any():
+    #     for col in ['weak', 'topped', 'under', 'flare', 'solid_contact', 'barrel']:
+    #         merged_base_df.loc[mask_sum, col] = merged_base_df.loc[mask_sum, col] / merged_base_df.loc[mask_sum, 'sum']
         
-        numerator = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
-        merged_base_df.loc[mask_sum, 'plus_lsa4'] = numerator[mask_sum] / merged_base_df.loc[mask_sum, 'sum']
+    #     numerator = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
+    #     merged_base_df.loc[mask_sum, 'plus_lsa4'] = numerator[mask_sum] / merged_base_df.loc[mask_sum, 'sum']
     
     # 접근 방식 분류 추가
     kbo_z_swing = 0.654
@@ -915,13 +915,15 @@ def stats_df(merged_base_df):
         choicelist = ['Aggressive', 'Selective', 'Non_Selective', 'Passive']
         merged_base_df['approach'] = np.select(condition, choicelist, default='Not Specified')
 
+    merged_base_df['plus_las4'] = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel'] 
+
     # 출력할 컬럼 선택
     stats_output_df = merged_base_df[['game_date', 'pitname', 'pa', 'ab', 'hit', 'walk', 'strikeout','rel_speed(km)', 
                                      'inplay_pit', 'exit_velocity', 'launch_angleX',  
                                      'avg', 'obp', 'slg', 'ops', 'z%', 'z_swing%', 'z_con%', 'z_inplay%', 
                                      'o%', 'o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%', 
                                      'inplay_sw', 'weak', 'topped', 'under', 'flare', 'solid_contact', 
-                                     'barrel', 'approach', 'plus_lsa4']]
+                                     'barrel', 'approach' 'plus_lsa4']]
 
 
     # 퍼센트 표시 열 목록
