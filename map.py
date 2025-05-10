@@ -718,7 +718,7 @@ def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
         # 레이아웃 설정
         pitch_by_pitch_fig.update_layout(
             autosize=False,  # 자동 크기 조정 비활성화
-            margin=dict(l=50, r=50, t=50, b=50),
+            margin=dict(l=30, r=50, t=20, b=20),
             xaxis_range=[-0.6, 0.6],
             yaxis_range=[0.0, 1.5],
             xaxis={'showgrid': False, 'zeroline': False},
@@ -749,7 +749,7 @@ def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
             annotation.update(y=annotation.y + 0.02)
 
         # 마커 및 텍스트 크기 설정
-        pitch_by_pitch_fig.update_traces(marker=dict(size=40))
+        pitch_by_pitch_fig.update_traces(marker=dict(size=30))
         pitch_by_pitch_fig.update_traces(textfont_size=24)
 
         # 코어존 및 스트라이크존 라인 추가
