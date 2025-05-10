@@ -1463,29 +1463,54 @@ def show_main_page():
                                 # 전체 HTML 구성 (빈 박스 + 그래프)
                                 complete_html = f"""
                                 <div style="width: 100%; 
-                                            height: 600px; 
-                                            border: none; 
+                                            height: 620px; 
+                                            border: 1px solid #ddd; 
                                             border-radius: 5px; 
                                             padding: 10px; 
                                             margin-bottom: 20px;
-                                            background-color: white;">
-                                    <div style="width: 100%; 
-                                                height: 100%; 
-                                                overflow-x: scroll; 
-                                                overflow-y: hidden; 
-                                                -webkit-overflow-scrolling: touch;
-                                                scrollbar-width: thin;
-                                                scrollbar-color: #888 #f1f1f1;">
-                                        <div style="width: {total_width}px; height: 550px;">
+                                            background-color: white;
+                                            position: relative;">
+                                    <div id="scrollContainer" style="width: 100%; 
+                                                height: 550px; 
+                                                overflow-x: hidden; 
+                                                position: relative;">
+                                        <div id="contentDiv" style="width: {total_width}px; min-width: 1000px; height: 550px;">
                                             {fig_html}
                                         </div>
-                                        <!-- 스크롤 안내 텍스트 -->
-                                        <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
-                                            ← 좌우로 스크롤하여 더 보기 →
-                                        </div>
                                     </div>
-                                    <!-- 스크롤바 스타일 -->
-
+                                    
+                                    <!-- 스크롤 컨트롤 버튼 -->
+                                    <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px;">
+                                        <button id="scrollLeftBtn" style="margin-right: 10px; padding: 5px 15px; background-color: #4CAF50; color: white; 
+                                                                         border: none; border-radius: 4px; cursor: pointer;">
+                                            ← 왼쪽으로
+                                        </button>
+                                        <span style="margin: 0 15px; color: #555;">스크롤하여 더 보기</span>
+                                        <button id="scrollRightBtn" style="margin-left: 10px; padding: 5px 15px; background-color: #4CAF50; color: white; 
+                                                                          border: none; border-radius: 4px; cursor: pointer;">
+                                            오른쪽으로 →
+                                        </button>
+                                    </div>
+                                    
+                                    <script>
+                                        // 스크롤 기능 구현
+                                        document.getElementById('scrollLeftBtn').addEventListener('click', function() {{
+                                            document.getElementById('scrollContainer').scrollBy({{ left: -300, behavior: 'smooth' }});
+                                        }});
+                                        
+                                        document.getElementById('scrollRightBtn').addEventListener('click', function() {{
+                                            document.getElementById('scrollContainer').scrollBy({{ left: 300, behavior: 'smooth' }});
+                                        }});
+                                        
+                                        // 키보드 화살표 키 지원
+                                        document.addEventListener('keydown', function(e) {{
+                                            if (e.key === 'ArrowLeft') {{
+                                                document.getElementById('scrollContainer').scrollBy({{ left: -100, behavior: 'smooth' }});
+                                            }} else if (e.key === 'ArrowRight') {{
+                                                document.getElementById('scrollContainer').scrollBy({{ left: 100, behavior: 'smooth' }});
+                                            }}
+                                        }});
+                                    </script>
                                 </div>
                                 """
                                 
@@ -1523,28 +1548,54 @@ def show_main_page():
                                             # 전체 HTML 구성 (빈 박스 + 그래프)
                                             complete_html = f"""
                                             <div style="width: 100%; 
-                                                        height: 600px; 
-                                                        border: none; 
+                                                        height: 620px; 
+                                                        border: 1px solid #ddd; 
                                                         border-radius: 5px; 
                                                         padding: 10px; 
                                                         margin-bottom: 20px;
-                                                        background-color: white;">
-                                                <div style="width: 100%; 
-                                                            height: 100%; 
-                                                            overflow-x: scroll; 
-                                                            overflow-y: hidden; 
-                                                            -webkit-overflow-scrolling: touch;
-                                                            scrollbar-width: thin;
-                                                            scrollbar-color: #888 #f1f1f1;">
-                                                    <div style="width: {total_width}px; height: 550px;">
+                                                        background-color: white;
+                                                        position: relative;">
+                                                <div id="scrollContainer" style="width: 100%; 
+                                                            height: 550px; 
+                                                            overflow-x: hidden; 
+                                                            position: relative;">
+                                                    <div id="contentDiv" style="width: {total_width}px; min-width: 1000px; height: 550px;">
                                                         {fig_html}
                                                     </div>
-                                                    <!-- 스크롤 안내 텍스트 -->
-                                                    <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
-                                                        ← 좌우로 스크롤하여 더 보기 →
-                                                    </div>
                                                 </div>
-
+                                                
+                                                <!-- 스크롤 컨트롤 버튼 -->
+                                                <div style="display: flex; justify-content: center; align-items: center; margin-top: 10px;">
+                                                    <button id="scrollLeftBtn" style="margin-right: 10px; padding: 5px 15px; background-color: #4CAF50; color: white; 
+                                                                                     border: none; border-radius: 4px; cursor: pointer;">
+                                                        ← 왼쪽으로
+                                                    </button>
+                                                    <span style="margin: 0 15px; color: #555;">스크롤하여 더 보기</span>
+                                                    <button id="scrollRightBtn" style="margin-left: 10px; padding: 5px 15px; background-color: #4CAF50; color: white; 
+                                                                                      border: none; border-radius: 4px; cursor: pointer;">
+                                                        오른쪽으로 →
+                                                    </button>
+                                                </div>
+                                                
+                                                <script>
+                                                    // 스크롤 기능 구현
+                                                    document.getElementById('scrollLeftBtn').addEventListener('click', function() {{
+                                                        document.getElementById('scrollContainer').scrollBy({{ left: -300, behavior: 'smooth' }});
+                                                    }});
+                                                    
+                                                    document.getElementById('scrollRightBtn').addEventListener('click', function() {{
+                                                        document.getElementById('scrollContainer').scrollBy({{ left: 300, behavior: 'smooth' }});
+                                                    }});
+                                                    
+                                                    // 키보드 화살표 키 지원
+                                                    document.addEventListener('keydown', function(e) {{
+                                                        if (e.key === 'ArrowLeft') {{
+                                                            document.getElementById('scrollContainer').scrollBy({{ left: -100, behavior: 'smooth' }});
+                                                        }} else if (e.key === 'ArrowRight') {{
+                                                            document.getElementById('scrollContainer').scrollBy({{ left: 100, behavior: 'smooth' }});
+                                                        }}
+                                                    }});
+                                                </script>
                                             </div>
                                             """
                                             
