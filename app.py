@@ -1451,11 +1451,36 @@ def show_main_page():
                                             padding: 10px; 
                                             margin-bottom: 20px;
                                             background-color: white;">
-                                    <div style="width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden;">
+                                    <div style="width: 100%; 
+                                                height: 100%; 
+                                                overflow-x: scroll; 
+                                                overflow-y: hidden; 
+                                                -webkit-overflow-scrolling: touch;
+                                                scrollbar-width: thin;
+                                                scrollbar-color: #888 #f1f1f1;">
                                         <div style="width: {total_width}px; height: 550px;">
                                             {fig_html}
                                         </div>
+                                        <!-- 스크롤 안내 텍스트 -->
+                                        <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
+                                            ← 좌우로 스크롤하여 더 보기 →
+                                        </div>
                                     </div>
+                                    <!-- 스크롤바 스타일 -->
+                                    <style>
+                                        /* Webkit 브라우저용 스크롤바 스타일 */
+                                        ::-webkit-scrollbar {
+                                            height: 10px;
+                                            background-color: #f1f1f1;
+                                        }
+                                        ::-webkit-scrollbar-thumb {
+                                            background-color: #888;
+                                            border-radius: 5px;
+                                        }
+                                        ::-webkit-scrollbar-thumb:hover {
+                                            background-color: #555;
+                                        }
+                                    </style>
                                 </div>
                                 """
                                 
@@ -1494,16 +1519,41 @@ def show_main_page():
                                             complete_html = f"""
                                             <div style="width: 100%; 
                                                         height: 600px; 
-                                                        border: 1px none; 
+                                                        border: none; 
                                                         border-radius: 5px; 
                                                         padding: 10px; 
                                                         margin-bottom: 20px;
                                                         background-color: white;">
-                                                <div style="width: 100%; height: 100%; overflow-x: auto; overflow-y: hidden;">
+                                                <div style="width: 100%; 
+                                                            height: 100%; 
+                                                            overflow-x: scroll; 
+                                                            overflow-y: hidden; 
+                                                            -webkit-overflow-scrolling: touch;
+                                                            scrollbar-width: thin;
+                                                            scrollbar-color: #888 #f1f1f1;">
                                                     <div style="width: {total_width}px; height: 550px;">
                                                         {fig_html}
                                                     </div>
+                                                    <!-- 스크롤 안내 텍스트 -->
+                                                    <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
+                                                        ← 좌우로 스크롤하여 더 보기 →
+                                                    </div>
                                                 </div>
+                                                <!-- 스크롤바 스타일 -->
+                                                <style>
+                                                    /* Webkit 브라우저용 스크롤바 스타일 */
+                                                    ::-webkit-scrollbar {
+                                                        height: 10px;
+                                                        background-color: #f1f1f1;
+                                                    }
+                                                    ::-webkit-scrollbar-thumb {
+                                                        background-color: #888;
+                                                        border-radius: 5px;
+                                                    }
+                                                    ::-webkit-scrollbar-thumb:hover {
+                                                        background-color: #555;
+                                                    }
+                                                </style>
                                             </div>
                                             """
                                             
