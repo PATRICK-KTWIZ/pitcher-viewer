@@ -1467,20 +1467,7 @@ def show_main_page():
                                         </div>
                                     </div>
                                     <!-- 스크롤바 스타일 -->
-                                    <style>
-                                        /* Webkit 브라우저용 스크롤바 스타일 */
-                                        ::-webkit-scrollbar {
-                                            height: 10px;
-                                            background-color: #f1f1f1;
-                                        }
-                                        ::-webkit-scrollbar-thumb {
-                                            background-color: #888;
-                                            border-radius: 5px;
-                                        }
-                                        ::-webkit-scrollbar-thumb:hover {
-                                            background-color: #555;
-                                        }
-                                    </style>
+
                                 </div>
                                 """
                                 
@@ -1539,21 +1526,7 @@ def show_main_page():
                                                         ← 좌우로 스크롤하여 더 보기 →
                                                     </div>
                                                 </div>
-                                                <!-- 스크롤바 스타일 -->
-                                                <style>
-                                                    /* Webkit 브라우저용 스크롤바 스타일 */
-                                                    ::-webkit-scrollbar {
-                                                        height: 10px;
-                                                        background-color: #f1f1f1;
-                                                    }
-                                                    ::-webkit-scrollbar-thumb {
-                                                        background-color: #888;
-                                                        border-radius: 5px;
-                                                    }
-                                                    ::-webkit-scrollbar-thumb:hover {
-                                                        background-color: #555;
-                                                    }
-                                                </style>
+
                                             </div>
                                             """
                                             
