@@ -1160,8 +1160,13 @@ def show_main_page():
                         # 실제 데이터에 있는 구종만 필터링하여 순서 지정
                         ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
                         
-                        # 좌측 라벨 열과 구종별 열 생성
-                        cols = st.columns([1] + [3] * len(ordered_pitches))
+                        num_pitches = len(ordered_pitches)
+                        col_widths = [1]  # 첫 번째 컬럼(라벨용)은 항상 1
+                        
+                        pitch_col_width = max(2, 10 // num_pitches)  # 예: 3개면 3, 5개면 2
+                        col_widths.extend([pitch_col_width] * num_pitches)
+                        
+                        cols = st.columns(col_widths)
                         
                         # 좌측 라벨 열
                         with cols[0]:
@@ -1171,14 +1176,10 @@ def show_main_page():
                                 <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">좌타자</div>
                             </div>
                             """, unsafe_allow_html=True)
-
-
+            
                         # 각 구종별 차트 표시
                         for idx, pitch_name in enumerate(ordered_pitches):
                             with cols[idx + 1]:
-                                # # 구종 이름을 상단에 표시
-                                # st.markdown(f"<h4 style='text-align: center;'>{pitch_name}</h4>", unsafe_allow_html=True)
-                                
                                 # 해당 구종의 데이터만 필터링
                                 pitch_df = current_year_df[current_year_df['pitch_name'] == pitch_name]
                                 
@@ -1206,8 +1207,17 @@ def show_main_page():
                                     # 실제 데이터에 있는 구종만 필터링하여 순서 지정
                                     ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
                                     
-                                    # 좌측 라벨 열과 구종별 열 생성
-                                    year_cols = st.columns([1] + [3] * len(ordered_pitches))
+                                    # 여기서 수정 시작 - 구종 개수에 따라 컬럼 너비 동적 조정
+                                    num_pitches = len(ordered_pitches)
+                                    year_col_widths = [1]  # 첫 번째 컬럼(라벨용)은 항상 1
+                                    
+                                    # 나머지 컬럼은 구종 개수에 따라 동일한 너비 할당
+                                    pitch_col_width = max(2, 10 // num_pitches)  # 예: 3개면 3, 5개면 2
+                                    year_col_widths.extend([pitch_col_width] * num_pitches)
+                                    
+                                    # 동적 너비로 컬럼 생성
+                                    year_cols = st.columns(year_col_widths)
+                                    # 여기서 수정 끝
                                     
                                     # 좌측 라벨 열
                                     with year_cols[0]:
@@ -1221,18 +1231,12 @@ def show_main_page():
                                     # 각 구종별 차트 표시
                                     for idx, pitch_name in enumerate(ordered_pitches):
                                         with year_cols[idx + 1]:
-                                            
                                             # 해당 구종의 데이터만 필터링
                                             pitch_df = year_df[year_df['pitch_name'] == pitch_name]
-
-                                          
+                                            
                                             # 구종별 로케이션 차트 생성
                                             pitch_fig = season_location_fig(pitch_df, pitch_name)
-
-
-                                            st.plotly_chart(pitch_fig, use_container_width=True, config={'displayModeBar': False,  # 도구바 숨기기
-                                                                                                         'staticPlot': False,      # 상호작용 유지
-                                                            },key=f"pitch_{pitcher}_{year}_{idx}")
+                                            st.plotly_chart(pitch_fig, use_container_width=True, key=f"pitch_{pitcher}_{year}_{idx}")
                                 else:
                                     st.write(f"{pitcher_name}의 {year}년 구종 데이터가 없습니다.")
                                 
@@ -1241,10 +1245,9 @@ def show_main_page():
                                     st.markdown("---")
                     else:
                         st.write(f"{pitcher_name}의 이전 시즌 데이터가 없습니다.")
-
+            
                     # 투수 간 구분선 추가
                     st.markdown("---")
-
 
 # -------------------------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------------------------
