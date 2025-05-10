@@ -295,7 +295,7 @@ def season_location_fig(dataframe, pitch_name):
         facet_row='stand',  # 좌/우타자로만 구분
         category_orders={"stand": ['R', 'L']},
         height=600, 
-        width=300,  # 단일 구종 차트 너비
+        width=350,  # 단일 구종 차트 너비
         title=pitch_name
     )
 
@@ -307,7 +307,7 @@ def season_location_fig(dataframe, pitch_name):
     )
 
     season_location_fig.update_layout(
-        autosize=False,
+        autosize=True,
         margin=dict(l=0, r=0, t=30, b=20),
         xaxis_range=[-0.45,0.45],
         yaxis_range=[0.27,1.25],
