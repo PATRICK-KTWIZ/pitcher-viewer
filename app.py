@@ -1166,7 +1166,7 @@ def show_main_page():
                         pitch_col_width = max(2, 10 // num_pitches)  # 예: 3개면 3, 5개면 2
                         col_widths.extend([pitch_col_width] * num_pitches)
                         
-                        cols = st.columns(col_widths)
+                        cols = st.columns([1] + [1] * len(ordered_pitches))
                         
                         # 좌측 라벨 열
                         with cols[0]:
@@ -1216,7 +1216,7 @@ def show_main_page():
                                     year_col_widths.extend([pitch_col_width] * num_pitches)
                                     
                                     # 동적 너비로 컬럼 생성
-                                    year_cols = st.columns(year_col_widths)
+                                    year_cols = st.columns([1] + [1] * len(ordered_pitches))
                                     # 여기서 수정 끝
                                     
                                     # 좌측 라벨 열
