@@ -187,8 +187,8 @@ def season_pitchtrack_chart(dataframe):
 
     # # 체인지업
     fig.add_trace(go.Scatter3d(x=changeupx, y=tracey, z=changeupz,mode='lines',line = dict(color='blue',width=ticks)))
-    fig.add_trace(go.Scatter3d(x=[changeupx[0]], y=[tracey[0]], z=[changeupz[0]],mode = 'markers',marker=dict(color='green', size= size)))
-    fig.add_trace(go.Scatter3d(x=[changeupx[dis]], y=[tracey[dis]], z=[changeupz[dis]],mode = 'markers',marker=dict(color='green', size= size)))
+    fig.add_trace(go.Scatter3d(x=[changeupx[0]], y=[tracey[0]], z=[changeupz[0]],mode = 'markers',marker=dict(color='blue', size= size)))
+    fig.add_trace(go.Scatter3d(x=[changeupx[dis]], y=[tracey[dis]], z=[changeupz[dis]],mode = 'markers',marker=dict(color='blue', size= size)))
 
     # # # 포크
     fig.add_trace(go.Scatter3d(x=splitterx, y=tracey, z=splitterz,mode='lines',line = dict(color='brown',width=ticks)))
@@ -202,8 +202,8 @@ def season_pitchtrack_chart(dataframe):
 
     # # 스위퍼
     fig.add_trace(go.Scatter3d(x=sweeperx, y=tracey, z=sweeperz,mode='lines',line = dict(color='gold',width=ticks)))
-    fig.add_trace(go.Scatter3d(x=[sweeperx[0]], y=[tracey[0]], z=[sweeperz[0]],mode = 'markers',marker=dict(color='orange', size= size)))
-    fig.add_trace(go.Scatter3d(x=[sweeperx[dis]], y=[tracey[dis]], z=[sweeperz[dis]],mode = 'markers',marker=dict(color='orange', size= size)))
+    fig.add_trace(go.Scatter3d(x=[sweeperx[0]], y=[tracey[0]], z=[sweeperz[0]],mode = 'markers',marker=dict(color='gold', size= size)))
+    fig.add_trace(go.Scatter3d(x=[sweeperx[dis]], y=[tracey[dis]], z=[sweeperz[dis]],mode = 'markers',marker=dict(color='gold', size= size)))
 
 
     # 존 그리기
