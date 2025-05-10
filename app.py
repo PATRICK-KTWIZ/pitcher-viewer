@@ -996,7 +996,7 @@ def show_main_page():
                 
                 st.markdown(""" <div style="text-align: right; font-size: 0.9em;">
                                 <span style="font-weight: bold;">색상 범례:</span> 
-                                붉은색: 포심 / 핑크: 투심 / 보라: 커터 / 파랑 : 슬라이더 / 오랜지: 커브 / 노랑: 스위퍼 / 녹색: 체인지업 / 갈색: 포크 
+                                빨강: 포심 / 핑크: 투심 / 보라: 커터 / 녹색 : 슬라이더 / 오랜지: 커브 / 골드: 스위퍼 / 파랑: 체인지업 / 갈색: 포크 
                             </div>
                             """, 
                             unsafe_allow_html=True)
