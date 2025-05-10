@@ -318,6 +318,7 @@ def show_login_page():
     # 로그인 페이지 클래스 닫기
     st.markdown('</div>', unsafe_allow_html=True)
 
+
 def show_main_page():
     # Check if the user is logged in
     
@@ -327,6 +328,23 @@ def show_main_page():
 
     # 메인 페이지 클래스 추가
     st.markdown('<div class="main-page">', unsafe_allow_html=True)
+
+    st.markdown("""
+    <style>
+        /* Webkit 브라우저용 스크롤바 스타일 */
+        ::-webkit-scrollbar {
+            height: 10px;
+            background-color: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background-color: #888;
+            border-radius: 5px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background-color: #555;
+        }
+    </style>
+    """, unsafe_allow_html=True)
     
     st.markdown("""
     <style>
