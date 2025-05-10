@@ -284,7 +284,12 @@ def season_pitched_fig(dataframe):
 
 def season_location_fig(dataframe, pitch_name):
     sdf = dataframe[dataframe['pitch_name'] == pitch_name]  # 특정 구종만 필터링
-    
+
+    # 구종 개수에 따라 차트 너비 동적 조정
+    # 구종이 많을수록 차트 너비를 줄임
+    base_width = 1000  # 기본 너비
+    chart_width = base_width // max(1, num_pitches)  # 구종 개수로 나눔
+
     # 좌/우타자 구분으로 차트 생성
     season_location_fig = px.density_contour(
         sdf, 
@@ -307,7 +312,7 @@ def season_location_fig(dataframe, pitch_name):
     )
 
     season_location_fig.update_layout(
-        autosize=True,
+        autosize=False,
         margin=dict(l=0, r=0, t=30, b=20),
         xaxis_range=[-0.45,0.45],
         yaxis_range=[0.27,1.25],
