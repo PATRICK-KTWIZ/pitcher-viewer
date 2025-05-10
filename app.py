@@ -1160,32 +1160,66 @@ def show_main_page():
                         # 실제 데이터에 있는 구종만 필터링하여 순서 지정
                         ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
                         
-                        num_pitches = len(ordered_pitches)
-                        col_widths = [1]  # 첫 번째 컬럼(라벨용)은 항상 1
+                        # 구종 개수에 따라 전체 너비 계산
+                        pitch_count = len(ordered_pitches)
+                        total_width = pitch_count * 300  # 기본 너비 사용 (구종당 300px)
                         
-                        pitch_col_width = max(2, 10 // num_pitches)  # 예: 3개면 3, 5개면 2
-                        col_widths.extend([pitch_col_width] * num_pitches)
+                        # 각 구종별 차트 생성
+                        pitch_figures = {}
+                        for pitch_name in ordered_pitches:
+                            # 해당 구종의 데이터만 필터링
+                            pitch_df = current_year_df[current_year_df['pitch_name'] == pitch_name]
+                            
+                            # 구종별 로케이션 차트 생성
+                            pitch_figures[pitch_name] = season_location_fig(pitch_df, pitch_name)
                         
-                        cols = st.columns([1] + [1] * len(ordered_pitches))
-                        
-                        # 좌측 라벨 열
-                        with cols[0]:
-                            st.markdown("""
-                            <div style="height: 600px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 150px 0;">
-                                <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">우타자</div>
-                                <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">좌타자</div>
+                        # 모든 그래프를 HTML로 변환
+                        html_components = []
+                        for pitch_name, fig in pitch_figures.items():
+                            fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
+                            html_components.append(f"""
+                            <div style="display: inline-block; width: 300px; height: 600px; margin-right: 5px;">
+                                <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
+                                {fig_html}
                             </div>
-                            """, unsafe_allow_html=True)
-            
-                        # 각 구종별 차트 표시
-                        for idx, pitch_name in enumerate(ordered_pitches):
-                            with cols[idx + 1]:
-                                # 해당 구종의 데이터만 필터링
-                                pitch_df = current_year_df[current_year_df['pitch_name'] == pitch_name]
-                                
-                                # 구종별 로케이션 차트 생성
-                                pitch_fig = season_location_fig(pitch_df, pitch_name)
-                                st.plotly_chart(pitch_fig, use_container_width=True, key=f"pitch_{pitcher}_{current_year}_{idx}")
+                            """)
+                        
+                        # 좌측 라벨 (좌타자/우타자) 추가
+                        label_html = """
+                        <div style="display: inline-block; width: 50px; height: 600px; vertical-align: top; padding-top: 250px;">
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 100px;">우타자</div>
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 100px;">좌타자</div>
+                        </div>
+                        """
+                        
+                        # 전체 HTML 구성 (라벨 + 그래프들)
+                        complete_html = f"""
+                        <div style="width: 100%; 
+                                    height: 650px; 
+                                    border: none; 
+                                    border-radius: 5px; 
+                                    padding: 10px; 
+                                    margin-bottom: 20px;
+                                    background-color: white;">
+                            <div style="width: 100%; 
+                                        height: 100%; 
+                                        overflow-x: scroll; 
+                                        overflow-y: hidden; 
+                                        -webkit-overflow-scrolling: touch;">
+                                <div style="width: {total_width + 50}px; height: 600px;">
+                                    {label_html}
+                                    {''.join(html_components)}
+                                </div>
+                                <!-- 스크롤 안내 텍스트 -->
+                                <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
+                                    ← 좌우로 스크롤하여 더 보기 →
+                                </div>
+                            </div>
+                        </div>
+                        """
+                        
+                        # HTML 컴포넌트로 렌더링
+                        html(complete_html, height=650)
                     else:
                         st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
                     
@@ -1207,36 +1241,66 @@ def show_main_page():
                                     # 실제 데이터에 있는 구종만 필터링하여 순서 지정
                                     ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
                                     
-                                    # 여기서 수정 시작 - 구종 개수에 따라 컬럼 너비 동적 조정
-                                    num_pitches = len(ordered_pitches)
-                                    year_col_widths = [1]  # 첫 번째 컬럼(라벨용)은 항상 1
+                                    # 구종 개수에 따라 전체 너비 계산
+                                    pitch_count = len(ordered_pitches)
+                                    total_width = pitch_count * 300  # 기본 너비 사용 (구종당 300px)
                                     
-                                    # 나머지 컬럼은 구종 개수에 따라 동일한 너비 할당
-                                    pitch_col_width = max(2, 10 // num_pitches)  # 예: 3개면 3, 5개면 2
-                                    year_col_widths.extend([pitch_col_width] * num_pitches)
+                                    # 각 구종별 차트 생성
+                                    pitch_figures = {}
+                                    for pitch_name in ordered_pitches:
+                                        # 해당 구종의 데이터만 필터링
+                                        pitch_df = year_df[year_df['pitch_name'] == pitch_name]
+                                        
+                                        # 구종별 로케이션 차트 생성
+                                        pitch_figures[pitch_name] = season_location_fig(pitch_df, pitch_name)
                                     
-                                    # 동적 너비로 컬럼 생성
-                                    year_cols = st.columns([1] + [1] * len(ordered_pitches))
-                                    # 여기서 수정 끝
-                                    
-                                    # 좌측 라벨 열
-                                    with year_cols[0]:
-                                        st.markdown("""
-                                        <div style="height: 700px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 200px 0;">
-                                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">우타자</div>
-                                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">좌타자</div>
+                                    # 모든 그래프를 HTML로 변환
+                                    html_components = []
+                                    for pitch_name, fig in pitch_figures.items():
+                                        fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
+                                        html_components.append(f"""
+                                        <div style="display: inline-block; width: 300px; height: 600px; margin-right: 5px;">
+                                            <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
+                                            {fig_html}
                                         </div>
-                                        """, unsafe_allow_html=True)
+                                        """)
                                     
-                                    # 각 구종별 차트 표시
-                                    for idx, pitch_name in enumerate(ordered_pitches):
-                                        with year_cols[idx + 1]:
-                                            # 해당 구종의 데이터만 필터링
-                                            pitch_df = year_df[year_df['pitch_name'] == pitch_name]
-                                            
-                                            # 구종별 로케이션 차트 생성
-                                            pitch_fig = season_location_fig(pitch_df, pitch_name)
-                                            st.plotly_chart(pitch_fig, use_container_width=True, key=f"pitch_{pitcher}_{year}_{idx}")
+                                    # 좌측 라벨 (좌타자/우타자) 추가
+                                    label_html = """
+                                    <div style="display: inline-block; width: 50px; height: 600px; vertical-align: top; padding-top: 250px;">
+                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 100px;">우타자</div>
+                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 100px;">좌타자</div>
+                                    </div>
+                                    """
+                                    
+                                    # 전체 HTML 구성 (라벨 + 그래프들)
+                                    complete_html = f"""
+                                    <div style="width: 100%; 
+                                                height: 650px; 
+                                                border: none; 
+                                                border-radius: 5px; 
+                                                padding: 10px; 
+                                                margin-bottom: 20px;
+                                                background-color: white;">
+                                        <div style="width: 100%; 
+                                                    height: 100%; 
+                                                    overflow-x: scroll; 
+                                                    overflow-y: hidden; 
+                                                    -webkit-overflow-scrolling: touch;">
+                                            <div style="width: {total_width + 50}px; height: 600px;">
+                                                {label_html}
+                                                {''.join(html_components)}
+                                            </div>
+                                            <!-- 스크롤 안내 텍스트 -->
+                                            <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
+                                                ← 좌우로 스크롤하여 더 보기 →
+                                            </div>
+                                        </div>
+                                    </div>
+                                    """
+                                    
+                                    # HTML 컴포넌트로 렌더링
+                                    html(complete_html, height=650)
                                 else:
                                     st.write(f"{pitcher_name}의 {year}년 구종 데이터가 없습니다.")
                                 
@@ -1245,7 +1309,7 @@ def show_main_page():
                                     st.markdown("---")
                     else:
                         st.write(f"{pitcher_name}의 이전 시즌 데이터가 없습니다.")
-            
+        
                     # 투수 간 구분선 추가
                     st.markdown("---")
 
