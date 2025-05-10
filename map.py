@@ -12,11 +12,11 @@ def season_movement_chart(dataframe):
                 "4-Seam Fastball": "red",
                 "2-Seam Fastball": "pink",
                 "Cutter": "purple",
-                "Slider": "blue",
-                "Changeup": "green",
+                "Slider": "green",
+                "Changeup": "blue",
                 "Curveball": "orange",
                 "Split-Finger": "brown",
-                "Sweeper": "yellow"
+                "Sweeper": "gold"
 
                 },
                  hover_name="pitname", hover_data=["rel_speed(km)","pitch_name","game_date", "batname", "events","exit_velocity","description","launch_speed_angle","launch_angle"],
@@ -295,7 +295,7 @@ def season_location_fig(dataframe, pitch_name):
         facet_row='stand',  # 좌/우타자로만 구분
         category_orders={"stand": ['R', 'L']},
         height=600, 
-        width=400,  # 단일 구종 차트 너비
+        width=300,  # 단일 구종 차트 너비
         title=pitch_name
     )
 
