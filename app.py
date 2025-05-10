@@ -50,8 +50,8 @@ st.markdown("""
         color: black !important;
         width: 100%;
         border-radius: 7px;  /* 모서리 둥글기 */
-        padding: 0.8rem 1rem;  /* 상하 패딩 증가 (0.5rem → 0.8rem) */
-        height: 3rem;  /* 버튼 높이 지정 */
+        padding: 0.5rem 1rem;  /* 상하 패딩 증가 (0.5rem → 0.8rem) */
+        height: 2rem;  /* 버튼 높이 지정 */
         font-size: 16px;  /* 글자 크기 */
         margin-bottom: 0px;  /* 버튼 사이 간격 */
         font-weight: 500;  /* 글자 두께 */
