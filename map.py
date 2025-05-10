@@ -186,7 +186,7 @@ def season_pitchtrack_chart(dataframe):
     fig.add_trace(go.Scatter3d(x=[sliderx[dis]], y=[tracey[dis]], z=[sliderz[dis]],mode = 'markers',marker=dict(color='green', size= size)))
 
     # # 체인지업
-    fig.add_trace(go.Scatter3d(x=changeupx, y=tracey, z=changeupz,mode='lines',line = dict(color='green',width=ticks)))
+    fig.add_trace(go.Scatter3d(x=changeupx, y=tracey, z=changeupz,mode='lines',line = dict(color='blue',width=ticks)))
     fig.add_trace(go.Scatter3d(x=[changeupx[0]], y=[tracey[0]], z=[changeupz[0]],mode = 'markers',marker=dict(color='green', size= size)))
     fig.add_trace(go.Scatter3d(x=[changeupx[dis]], y=[tracey[dis]], z=[changeupz[dis]],mode = 'markers',marker=dict(color='green', size= size)))
 
@@ -201,7 +201,7 @@ def season_pitchtrack_chart(dataframe):
     fig.add_trace(go.Scatter3d(x=[curvex[dis]], y=[tracey[dis]], z=[curvez[dis]],mode = 'markers',marker=dict(color='orange', size= size)))
 
     # # 스위퍼
-    fig.add_trace(go.Scatter3d(x=sweeperx, y=tracey, z=sweeperz,mode='lines',line = dict(color='orange',width=ticks)))
+    fig.add_trace(go.Scatter3d(x=sweeperx, y=tracey, z=sweeperz,mode='lines',line = dict(color='gold',width=ticks)))
     fig.add_trace(go.Scatter3d(x=[sweeperx[0]], y=[tracey[0]], z=[sweeperz[0]],mode = 'markers',marker=dict(color='orange', size= size)))
     fig.add_trace(go.Scatter3d(x=[sweeperx[dis]], y=[tracey[dis]], z=[sweeperz[dis]],mode = 'markers',marker=dict(color='orange', size= size)))
 
@@ -285,6 +285,12 @@ def season_pitched_fig(dataframe):
 def season_location_fig(dataframe, pitch_name):
     sdf = dataframe
     
+    # pitch_name의 고유 개수 확인
+    unique_pitches = sdf['pitch_name'].nunique()
+    
+    # 적절한 너비 계산 (각 서브플롯당 400px 할당)
+    plot_width = min(2400, max(1200, unique_pitches * 400))
+    
     season_location_fig = px.density_contour(
         sdf, 
         x='plate_x', 
@@ -295,8 +301,9 @@ def season_location_fig(dataframe, pitch_name):
         facet_row='stand',
         category_orders={"stand": ['R', 'L']},
         height=600, 
-        width=2400,
-        title= pitch_name
+        width=plot_width,
+        facet_col_wrap=unique_pitches,  # pitch_name 개수에 맞게 컬럼 설정
+        title=pitch_name
     )
 
     # 컬러바 제거
@@ -307,74 +314,103 @@ def season_location_fig(dataframe, pitch_name):
         margin=dict(l=0, r=0, t=30, b=20),
         xaxis_range=[-0.45,0.45],
         yaxis_range=[0.27,1.25],
-        bargap = 0,
-        # xaxis = dict({'showgrid': False, 'zeroline': False, 'showticklabels': False}),
-        # yaxis = dict({'showgrid': False, 'zeroline': False, 'showticklabels': False}),
+        bargap=0,
         showlegend=False,
         plot_bgcolor='rgba(13,8,135,1)',
         paper_bgcolor='rgba(255,255,255,1)',
         title_x=0.3
     )
 
-        # 모든 서브플롯에 대해 설정 적용
+    # 모든 서브플롯에 대해 설정 적용
     season_location_fig.update_xaxes(
         showgrid=False, 
         zeroline=False, 
-        showticklabels=False,  # x축 숫자 제거
+        showticklabels=False,
         title=None
     )
     
     season_location_fig.update_yaxes(
         showgrid=False, 
         zeroline=False, 
-        showticklabels=False,  # y축 숫자 제거
+        showticklabels=False,
         title=None
     )
     
-        # 서브플롯 간 간격 줄이기
+    # 서브플롯 간 간격 줄이기
     season_location_fig.update_layout(
-        grid=dict(rows=2, columns=1, pattern="independent"),
+        grid=dict(rows=2, columns=unique_pitches, pattern="independent"),
         grid_xgap=0.01,  # x 방향 간격 줄이기
-        grid_ygap=1   # y 방향 간격 줄이기
+        grid_ygap=1      # y 방향 간격 줄이기
     )
 
     # 모든 서브플롯에 대해 축 라벨 제거
-    for i in range(1, len(season_location_fig.layout.annotations) + 1):
-        season_location_fig.update_xaxes(title=None, row=i, col=1)
-        season_location_fig.update_yaxes(title=None, row=i, col=1)
-    
-    # facet 라벨(R, L) 제거
     for annotation in season_location_fig.layout.annotations:
-        annotation.text = ""
-
+        if annotation.text.startswith('pitch_name='):
+            # pitch_name 라벨은 유지하되 필요시 간소화
+            annotation.text = annotation.text.replace('pitch_name=', '')
+        elif annotation.text.startswith('stand='):
+            # stand 라벨 제거
+            annotation.text = ""
 
     season_location_fig.update_yaxes(gridcolor='rgba(13,8,135,1)')
     season_location_fig.update_xaxes(gridcolor='rgba(13,8,135,1)')
 
     season_location_fig.update_traces(contours_coloring="fill", colorscale="Plasma", contours_showlabels=False)
 
+    # 스트라이크 존 추가
     homex = [-0.23, 0.23, 0.23, -0.23, -0.23]
     homey = [0.45, 0.45, 1.05, 1.05, 0.45]
+    season_location_fig.add_trace(go.Scatter(
+        x=homex, 
+        y=homey, 
+        mode='lines', 
+        line=dict(color='white', width=4),
+        showlegend=False
+    ), row='all', col='all')
+    
+    season_location_fig.add_trace(go.Scatter(
+        x=[0], 
+        y=[0.43], 
+        text=["<b>Strike Zone<b>"], 
+        mode="text", 
+        textfont_size=18, 
+        textfont_color='white'
+    ), row='all', col='all')
 
-    season_location_fig.append_trace(go.Scatter(x=homex, y=homey, mode='lines', line=dict(color='white', width=4)), row='all', col='all')
-    season_location_fig.add_trace(go.Scatter(x=[0], y=[0.43], text=["<b>Strike Zone<b>"], mode="text", textfont_size=18, textfont_color='white'), row='all', col='all')
-
+    # 코어 존 추가
     homex = [-0.12, 0.12, 0.12, -0.12, -0.12]
     homey = [0.59, 0.59, 0.91, 0.91, 0.59]
+    season_location_fig.add_trace(go.Scatter(
+        x=homex, 
+        y=homey, 
+        mode='lines', 
+        line=dict(color='red', width=3),
+        showlegend=False
+    ), row='all', col='all')
+    
+    season_location_fig.add_trace(go.Scatter(
+        x=[0], 
+        y=[0.57], 
+        text=["<b>Core Zone<b>"], 
+        mode="text", 
+        textfont_size=20, 
+        textfont_color='red'
+    ), row='all', col='all')
 
-    season_location_fig.append_trace(go.Scatter(x=homex, y=homey, mode='lines', line=dict(color='red', width=3)), row='all', col='all')
-    season_location_fig.add_trace(go.Scatter(x=[0], y=[0.57], text=["<b>Core Zone<b>"], mode="text", textfont_size=20, textfont_color='red'), row='all', col='all')
-
-    season_location_fig.add_shape(type="rect", x0=-0.34, y0=0.915, x1=-0.125, y1=1.15, line=dict(color="white", width=1, dash='dash'), row='all', col='all')
-    season_location_fig.add_shape(type="rect", x0=-0.115, y0=0.915, x1=0.115, y1=1.15, line=dict(color="white", width=1, dash='dash'), row='all', col='all')
-    season_location_fig.add_shape(type="rect", x0=0.125, y0=0.915, x1=0.34, y1=1.15, line=dict(color="white", width=1, dash='dash'), row='all', col='all')
-
-    season_location_fig.add_shape(type="rect", x0=-0.34, y0=0.595, x1=-0.125, y1=0.905, line=dict(color="white", width=1, dash='dash'), row='all', col='all')
-    season_location_fig.add_shape(type="rect", x0=0.125, y0=0.595, x1=0.34, y1=0.905, line=dict(color="white", width=1, dash='dash'), row='all', col='all')
-
-    season_location_fig.add_shape(type="rect", x0=-0.34, y0=0.35, x1=-0.125, y1=0.585, line=dict(color="white", width=1, dash='dash'), row='all', col='all')
-    season_location_fig.add_shape(type="rect", x0=-0.115, y0=0.35, x1=0.115, y1=0.585, line=dict(color="white", width=1, dash='dash'), row='all', col='all')
-    season_location_fig.add_shape(type="rect", x0=0.125, y0=0.35, x1=0.34, y1=0.585, line=dict(color="white", width=1, dash='dash'), row='all', col='all')
+    # 구역 분할 추가
+    zone_lines = [
+        dict(type="rect", x0=-0.34, y0=0.915, x1=-0.125, y1=1.15, line=dict(color="white", width=1, dash='dash')),
+        dict(type="rect", x0=-0.115, y0=0.915, x1=0.115, y1=1.15, line=dict(color="white", width=1, dash='dash')),
+        dict(type="rect", x0=0.125, y0=0.915, x1=0.34, y1=1.15, line=dict(color="white", width=1, dash='dash')),
+        dict(type="rect", x0=-0.34, y0=0.595, x1=-0.125, y1=0.905, line=dict(color="white", width=1, dash='dash')),
+        dict(type="rect", x0=0.125, y0=0.595, x1=0.34, y1=0.905, line=dict(color="white", width=1, dash='dash')),
+        dict(type="rect", x0=-0.34, y0=0.35, x1=-0.125, y1=0.585, line=dict(color="white", width=1, dash='dash')),
+        dict(type="rect", x0=-0.115, y0=0.35, x1=0.115, y1=0.585, line=dict(color="white", width=1, dash='dash')),
+        dict(type="rect", x0=0.125, y0=0.35, x1=0.34, y1=0.585, line=dict(color="white", width=1, dash='dash'))
+    ]
+    
+    for shape in zone_lines:
+        season_location_fig.add_shape(shape, row='all', col='all')
     
     return season_location_fig
 
