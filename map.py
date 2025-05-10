@@ -634,7 +634,7 @@ def create_pitcher_swing_map(df, pitcher_name, year, ordered_pitches):
     st.plotly_chart(swing_scatter_fig, use_container_width=True, key=f"swing_map_season_{pitcher_name}_{year}")
 
 
-def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
+def pitch_by_pitch_map(dataframe, width_per_batter=300, height=400):
     """
     투구 데이터를 이닝별, 타자별로 시각화하는 함수
     
@@ -642,9 +642,9 @@ def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
     -----------
     dataframe : DataFrame
         투구 데이터가 포함된 데이터프레임
-    width_per_batter : int, optional (default=250)
+    width_per_batter : int, optional (default=300)
         타자 한 명당 그래프 너비
-    height : int, optional (default=350)
+    height : int, optional (default=400)
         그래프 높이
     
     Returns:
@@ -718,7 +718,7 @@ def pitch_by_pitch_map(dataframe, width_per_batter=250, height=350):
         # 레이아웃 설정
         pitch_by_pitch_fig.update_layout(
             autosize=False,  # 자동 크기 조정 비활성화
-            margin=dict(l=30, r=50, t=20, b=20),
+            margin=dict(l=30, r=50, t=50, b=20),
             xaxis_range=[-0.6, 0.6],
             yaxis_range=[0.0, 1.5],
             xaxis={'showgrid': False, 'zeroline': False},
