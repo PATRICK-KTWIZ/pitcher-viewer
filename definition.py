@@ -196,8 +196,12 @@ def movement_dataframe(dataframe):
 
     grouped_df = mov_df.groupby(['game_year', 'pitch_name']).agg(agg_funcs)
 
+    grouped_df['ver_break'] =  grouped_df['ver_break'] * 100
+    grouped_df['hor_break'] =  grouped_df['hor_break'] * 100
+
+
     # 반올림
-    grouped_df = grouped_df.round({'rel_speed(km)': 1, 'release_spin_rate': 0, 'ver_break':2,'hor_break':2,'rel_height':2,'extension':2,'rel_side':2})
+    grouped_df = grouped_df.round({'rel_speed(km)': 1, 'release_spin_rate': 0, 'ver_break':1,'hor_break':1,'rel_height':2,'extension':2,'rel_side':2})
 
     # 인덱스 재정렬
     grouped_df = grouped_df.reindex([2025, 2024, 2023], level='game_year')
