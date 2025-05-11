@@ -1162,7 +1162,7 @@ def show_main_page():
                         
                         # 구종 개수에 따라 전체 너비 계산
                         pitch_count = len(ordered_pitches)
-                        total_width = pitch_count * 400  # 기본 너비 사용 (구종당 300px)
+                        total_width = pitch_count * 300  # 기본 너비 사용 (구종당 300px)
                         
                         # 각 구종별 차트 생성
                         pitch_figures = {}
@@ -1178,7 +1178,7 @@ def show_main_page():
                         for pitch_name, fig in pitch_figures.items():
                             fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
                             html_components.append(f"""
-                            <div style="display: inline-block; width: 400px; height: 1000px; margin-right: 5px;">
+                            <div style="display: inline-block; width: 300px; height: 600px; margin-right: 5px;">
                                 <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
                                 {fig_html}
                             </div>
@@ -1206,10 +1206,13 @@ def show_main_page():
                                         overflow-x: scroll; 
                                         overflow-y: hidden; 
                                         -webkit-overflow-scrolling: touch;">
-                                <div style="width: {total_width + 50}px; height: 700px;">
+                                <div style="width: {total_width + 50}px; height: 600px;">
                                     {label_html}
                                     {''.join(html_components)}
                                 </div>
+                                <!-- 스크롤 안내 텍스트 -->
+                                <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
+                                    ← 좌우로 스크롤하여 더 보기 →
                                 </div>
                             </div>
                         </div>
@@ -1256,7 +1259,7 @@ def show_main_page():
                                     for pitch_name, fig in pitch_figures.items():
                                         fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
                                         html_components.append(f"""
-                                        <div style="display: inline-block; width: 300px; height: 600px; margin-right: 5px;">
+                                        <div style="display: inline-block; width: 300px; height: 700px; margin-right: 5px;">
                                             <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
                                             {fig_html}
                                         </div>
@@ -1264,7 +1267,7 @@ def show_main_page():
                                     
                                     # 좌측 라벨 (좌타자/우타자) 추가
                                     label_html = """
-                                    <div style="display: inline-block; width: 50px; height: 600px; vertical-align: top; padding-top: 250px;">
+                                    <div style="display: inline-block; width: 40px; height: 700px; vertical-align: top; padding-top: 300px;">
                                         <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 100px;">우타자</div>
                                         <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 100px;">좌타자</div>
                                     </div>
@@ -1273,24 +1276,20 @@ def show_main_page():
                                     # 전체 HTML 구성 (라벨 + 그래프들)
                                     complete_html = f"""
                                     <div style="width: 100%; 
-                                                height: 650px; 
+                                                height: 750px; 
                                                 border: none; 
                                                 border-radius: 5px; 
-                                                padding: 10px; 
-                                                margin-bottom: 20px;
+                                                padding: 5px; 
+                                                margin-bottom: 10px;
                                                 background-color: white;">
                                         <div style="width: 100%; 
                                                     height: 100%; 
                                                     overflow-x: scroll; 
                                                     overflow-y: hidden; 
                                                     -webkit-overflow-scrolling: touch;">
-                                            <div style="width: {total_width + 50}px; height: 600px;">
+                                            <div style="width: {total_width + 40}px; height: 600px;">
                                                 {label_html}
                                                 {''.join(html_components)}
-                                            </div>
-                                            <!-- 스크롤 안내 텍스트 -->
-                                            <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
-                                                ← 좌우로 스크롤하여 더 보기 →
                                             </div>
                                         </div>
                                     </div>
