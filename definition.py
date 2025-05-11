@@ -97,7 +97,7 @@ def season_pitchname(player_df):
 def stats_viewer(dataframe):
 
     stats_viewer_df = dataframe[['game_date', 'pitname','pa','ab','hit','walk','strikeout','inplay_pit','exit_velocity','launch_angleX','obp','slg','avg','ops','weak','topped','under','flare','solid_contact','barrel']]
-    stats_viewer_df = stats_viewer_df.rename(columns={'game_year':'구분','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'피안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'투구당 인플레이','avg':'피안타율','obp':'피출루율','slg':'피장타율','ops':'피OPS', 'exit_velocity':'허용타구속도','launch_angleX':'허용발사각도',
+    stats_viewer_df = stats_viewer_df.rename(columns={'game_year':'구분','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'피안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'인플레이/투구','avg':'피안타율','obp':'피출루율','slg':'피장타율','ops':'피OPS', 'exit_velocity':'허용타구속도','launch_angleX':'허용발사각도',
                                                       'weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel'})
 
     return stats_viewer_df
