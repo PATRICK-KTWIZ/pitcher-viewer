@@ -282,7 +282,7 @@ def season_pitched_fig(dataframe):
 
     return season_pitched_fig
 
-def season_location_fig(dataframe, pitch_name, width=300, height=800):
+def season_location_fig(dataframe, pitch_name, width=300, height=600):
     """
     투구 데이터를 구종별, 타자 스탠스별로 시각화하는 함수
     
