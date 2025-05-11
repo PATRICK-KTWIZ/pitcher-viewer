@@ -1162,7 +1162,7 @@ def show_main_page():
                         
                         # 구종 개수에 따라 전체 너비 계산
                         pitch_count = len(ordered_pitches)
-                        total_width = pitch_count * 300  # 기본 너비 사용 (구종당 300px)
+                        total_width = pitch_count * 450  # 기본 너비 사용 (구종당 300px)
                         
                         # 각 구종별 차트 생성
                         pitch_figures = {}
@@ -1206,13 +1206,10 @@ def show_main_page():
                                         overflow-x: scroll; 
                                         overflow-y: hidden; 
                                         -webkit-overflow-scrolling: touch;">
-                                <div style="width: {total_width + 50}px; height: 600px;">
+                                <div style="width: {total_width + 50}px; height: 1000px;">
                                     {label_html}
                                     {''.join(html_components)}
                                 </div>
-                                <!-- 스크롤 안내 텍스트 -->
-                                <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
-                                    ← 좌우로 스크롤하여 더 보기 →
                                 </div>
                             </div>
                         </div>
