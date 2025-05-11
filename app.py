@@ -1162,7 +1162,7 @@ def show_main_page():
                         
                         # 구종 개수에 따라 전체 너비 계산
                         pitch_count = len(ordered_pitches)
-                        total_width = pitch_count * 450  # 기본 너비 사용 (구종당 300px)
+                        total_width = pitch_count * 400  # 기본 너비 사용 (구종당 300px)
                         
                         # 각 구종별 차트 생성
                         pitch_figures = {}
@@ -1178,7 +1178,7 @@ def show_main_page():
                         for pitch_name, fig in pitch_figures.items():
                             fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
                             html_components.append(f"""
-                            <div style="display: inline-block; width: 300px; height: 600px; margin-right: 5px;">
+                            <div style="display: inline-block; width: 400px; height: 1000px; margin-right: 5px;">
                                 <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
                                 {fig_html}
                             </div>
@@ -1206,7 +1206,7 @@ def show_main_page():
                                         overflow-x: scroll; 
                                         overflow-y: hidden; 
                                         -webkit-overflow-scrolling: touch;">
-                                <div style="width: {total_width + 50}px; height: 1000px;">
+                                <div style="width: {total_width + 50}px; height: 700px;">
                                     {label_html}
                                     {''.join(html_components)}
                                 </div>
