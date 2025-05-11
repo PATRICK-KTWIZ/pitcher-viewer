@@ -118,7 +118,7 @@ def stats_viewer_stand(dataframe):
 
     stats_viewer_pthrows_df = dataframe[['stand','game_date','pitname','pa','ab','hit','walk','strikeout','inplay_pit','exit_velocity','launch_angleX','obp','slg','avg','ops','weak','topped','under','flare','solid_contact','barrel']]
     
-    stats_viewer_pthrows_df = stats_viewer_pthrows_df.rename(columns={'game_year':'구분','stand':'타자유형','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
+    stats_viewer_pthrows_df = stats_viewer_pthrows_df.rename(columns={'game_year':'구분','stand':'타자유형','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'인플레이/투구','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
                                                         'exit_velocity':'타구속도','launch_angleX':'발사각도','hit_spin_rate':'타구스핀량'})
 
     return stats_viewer_pthrows_df
@@ -140,7 +140,7 @@ def stats_viewer_stand_pitchname(dataframe):
 
     stats_viewer_stand_pitchname_df = dataframe[['stand','pitch_name','game_date','pitname','pa','ab','hit','walk','strikeout','inplay_pit','exit_velocity','launch_angleX','obp','slg','avg','ops','weak','topped','under','flare','solid_contact','barrel']]
     
-    stats_viewer_stand_pitchname_df = stats_viewer_stand_pitchname_df.rename(columns={'game_year':'구분','stand':'타자유형','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
+    stats_viewer_stand_pitchname_df = stats_viewer_stand_pitchname_df.rename(columns={'game_year':'구분','stand':'타자유형','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'인플레이/투구','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
                                                         'exit_velocity':'타구속도','launch_angleX':'발사각도','hit_spin_rate':'타구스핀량'})
 
     return stats_viewer_stand_pitchname_df
@@ -161,7 +161,7 @@ def swing_viewer_stand_pitchname(dataframe):
 def stats_viewer_pitchname(dataframe):
 
     stats_viewer_pitchname_df = dataframe[['pitch_name','pitname','pa','ab','hit','walk','strikeout','inplay_pit','exit_velocity','launch_angleX','obp','slg','avg','ops','weak','topped','under','flare','solid_contact','barrel']]
-    stats_viewer_pitchname_df = stats_viewer_pitchname_df.rename(columns={'game_year':'구분','pitch_name':'세부구종','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
+    stats_viewer_pitchname_df = stats_viewer_pitchname_df.rename(columns={'game_year':'구분','pitch_name':'세부구종','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'인플레이/투구','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
                                                         'exit_velocity':'타구속도','launch_angleX':'발사각도','hit_spin_rate':'타구스핀량'})
 
     return stats_viewer_pitchname_df
