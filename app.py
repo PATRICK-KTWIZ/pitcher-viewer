@@ -1155,7 +1155,7 @@ def show_main_page():
                         available_pitches = current_year_df['pitch_name'].unique().tolist()
                         
                         # 원하는 순서의 구종 목록
-                        desired_order = ['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Curveball', 'Changeup', 'Split-Finger', 'Sweeper']
+                        desired_order = ['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Sweeper', 'Curveball', 'Changeup', 'Split-Finger']
                         
                         # 실제 데이터에 있는 구종만 필터링하여 순서 지정
                         ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
@@ -1232,7 +1232,7 @@ def show_main_page():
                                     available_pitches = year_df['pitch_name'].unique().tolist()
                                     
                                     # 원하는 순서의 구종 목록
-                                    desired_order = ['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Curveball', 'Changeup', 'Split-Finger', 'Sweeper']
+                                    desired_order = ['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Sweeper', 'Curveball', 'Changeup', 'Split-Finger']
                                     
                                     # 실제 데이터에 있는 구종만 필터링하여 순서 지정
                                     ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
@@ -1263,7 +1263,7 @@ def show_main_page():
                                     
                                     # 좌측 라벨 (좌타자/우타자) 추가
                                     label_html = """
-                                    <div style="display: inline-block; width: 40px; height: 700px; vertical-align: top; padding-top: 300px;">
+                                    <div style="display: inline-block; width: 40px; height: 600px; vertical-align: top; padding-top: 300px;">
                                         <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 100px;">우타자</div>
                                         <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 100px;">좌타자</div>
                                     </div>
