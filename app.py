@@ -1210,10 +1210,6 @@ def show_main_page():
                                     {label_html}
                                     {''.join(html_components)}
                                 </div>
-                                <!-- 스크롤 안내 텍스트 -->
-                                <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
-                                    ← 좌우로 스크롤하여 더 보기 →
-                                </div>
                             </div>
                         </div>
                         """
