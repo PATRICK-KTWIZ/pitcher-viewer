@@ -1178,7 +1178,7 @@ def show_main_page():
                         for pitch_name, fig in pitch_figures.items():
                             fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
                             html_components.append(f"""
-                            <div style="display: inline-block; width: 300px; height: 600px; margin-right: 5px;">
+                            <div style="display: inline-block; width: 250px; height: 600px; margin-right: 5px;">
                                 <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
                                 {fig_html}
                             </div>
@@ -1186,7 +1186,7 @@ def show_main_page():
                         
                         # 좌측 라벨 (좌타자/우타자) 추가
                         label_html = """
-                        <div style="display: inline-block; width: 50px; height: 600px; vertical-align: top; padding-top: 250px;">
+                        <div style="display: inline-block; width: 50px; height: 800px; vertical-align: top; padding-top: 250px;">
                             <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 100px;">우타자</div>
                             <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 100px;">좌타자</div>
                         </div>
@@ -1195,7 +1195,7 @@ def show_main_page():
                         # 전체 HTML 구성 (라벨 + 그래프들)
                         complete_html = f"""
                         <div style="width: 100%; 
-                                    height: 650px; 
+                                    height: 850px; 
                                     border: none; 
                                     border-radius: 5px; 
                                     padding: 10px; 
@@ -1206,7 +1206,7 @@ def show_main_page():
                                         overflow-x: scroll; 
                                         overflow-y: hidden; 
                                         -webkit-overflow-scrolling: touch;">
-                                <div style="width: {total_width + 50}px; height: 600px;">
+                                <div style="width: {total_width + 50}px; height: 800px;">
                                     {label_html}
                                     {''.join(html_components)}
                                 </div>
