@@ -1133,7 +1133,7 @@ def show_main_page():
             st.title('[시즌 :red[구종별 로케이션(Location)] 현황]')
 
             for pitcher, pitcher_df in pitcher_dataframes.items():
-                location_chart_df = pitcher_df
+                location_chart_df = globals()[f"df_{pitcher}"] = pitcher_df
                 
                 # 투수 정보 가져오기
                 pitcher_str = str(pitcher)
