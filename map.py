@@ -282,13 +282,37 @@ def season_pitched_fig(dataframe):
 
     return season_pitched_fig
 
-def season_location_fig(dataframe, pitch_name):
-    sdf = dataframe[dataframe['pitch_name'] == pitch_name]  # 특정 구종만 필터링
+def season_location_fig(dataframe, width_per_batter=300, height=400):
+        """
+    투구 데이터를 이닝별, 타자별로 시각화하는 함수
+    
+    Parameters:
+    -----------
+    dataframe : DataFrame
+        투구 데이터가 포함된 데이터프레임
+    width_per_pitches : int, optional (default=300)
+        타자 한 명당 그래프 너비
+    height : int, optional (default=400)
+        그래프 높이
+    
+    Returns:
+    --------
+    dict
+        이닝별 Plotly 그래프 객체가 저장된 딕셔너리
+    """
+    sdf = dataframe
+    figures = {}  # 이닝별 그래프를 저장할 딕셔너리
 
-    # 구종 개수에 따라 차트 너비 동적 조정
-    # 구종이 많을수록 차트 너비를 줄임
-    base_width = 1000  # 기본 너비
-    chart_width = base_width // max(1, num_pitches)  # 구종 개수로 나눔
+    for i in sdf.pitch_name.unique():
+        # 해당 이닝 데이터 추출 및 인덱스 설정
+        location_df = sdf[sdf['pitch_name'] == i].reset_index(drop=True)
+        location_df = location_df.reset_index()
+        location_df['index'] = location_df['index'] + 1
+
+        pitch_names = len(location_df.pitch_name.unique())
+        
+        # 동적 그래프 크기 계산 (타자 수에 따라 조정)
+        total_width = pitch_names * width_per_pitches
 
     # 좌/우타자 구분으로 차트 생성
     season_location_fig = px.density_contour(
@@ -299,8 +323,8 @@ def season_location_fig(dataframe, pitch_name):
         histfunc="count", 
         facet_row='stand',  # 좌/우타자로만 구분
         category_orders={"stand": ['R', 'L']},
-        height=600, 
-        width=350,  # 단일 구종 차트 너비
+        height=height, 
+        width=total_width,  # 단일 구종 차트 너비
         title=pitch_name
     )
 
