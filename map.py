@@ -302,17 +302,15 @@ def season_location_fig(dataframe, pitch_name, width=300, height=600):
     plotly.graph_objects.Figure
         Plotly 그래프 객체
     """
-    import plotly.express as px
-    import plotly.graph_objects as go
     
     # 데이터프레임 복사
-    sdf = dataframe.copy()
+    sdf = dataframe
     
-    # 타자 스탠스 컬럼 확인 (없으면 기본값 설정)
-    if 'stand' not in sdf.columns and 'batter_stand' in sdf.columns:
-        sdf['stand'] = sdf['batter_stand']
-    elif 'stand' not in sdf.columns:
-        sdf['stand'] = 'R'  # 기본값으로 우타자 설정
+    # # 타자 스탠스 컬럼 확인 (없으면 기본값 설정)
+    # if 'stand' not in sdf.columns and 'batter_stand' in sdf.columns:
+    #     sdf['stand'] = sdf['batter_stand']
+    # elif 'stand' not in sdf.columns:
+    #     sdf['stand'] = 'R'  # 기본값으로 우타자 설정
     
     # 좌/우타자 구분으로 차트 생성
     season_location_fig = px.density_contour(
@@ -323,7 +321,7 @@ def season_location_fig(dataframe, pitch_name, width=300, height=600):
         category_orders={"stand": ['R', 'L']},
         height=height, 
         width=width,
-        title=pitch_name
+        # title=pitch_name
     )
 
     # 컬러바 제거
