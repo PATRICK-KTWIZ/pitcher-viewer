@@ -1186,11 +1186,12 @@ def show_main_page():
                         
                         # 좌측 라벨 (좌타자/우타자) 추가
                         label_html = """
-                        <div style="display: inline-block; width: 50px; height: 800px; vertical-align: top; padding-top: 250px;">
-                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 100px;">우타자</div>
-                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 100px;">좌타자</div>
+                        <div style="display: inline-block; width: 50px; height: 800px; vertical-align: top; padding-top: 200px;">
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 80px;">우타자</div>
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 80px;">좌타자</div>
                         </div>
                         """
+
                         
                         # 전체 HTML 구성 (라벨 + 그래프들)
                         complete_html = f"""
@@ -1264,8 +1265,8 @@ def show_main_page():
                                     # 좌측 라벨 (좌타자/우타자) 추가
                                     label_html = """
                                     <div style="display: inline-block; width: 50px; height: 700px; vertical-align: top; padding-top: 200px;">
-                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 100px;">우타자</div>
-                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 100px;">좌타자</div>
+                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 80px;">우타자</div>
+                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 80px;">좌타자</div>
                                     </div>
                                     """
                                     
