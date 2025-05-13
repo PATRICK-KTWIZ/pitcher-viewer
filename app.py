@@ -1188,7 +1188,7 @@ def show_main_page():
                         label_html = """
                         <div style="display: inline-block; width: 50px; height: 800px; vertical-align: top; padding-top: 200px;">
                             <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 80px;">우타자</div>
-                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 250px;">좌타자</div>
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 230px;">좌타자</div>
                         </div>
                         """
 
@@ -1266,7 +1266,7 @@ def show_main_page():
                                     label_html = """
                                     <div style="display: inline-block; width: 50px; height: 700px; vertical-align: top; padding-top: 200px;">
                                         <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 80px;">우타자</div>
-                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 160px;">좌타자</div>
+                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 230px;">좌타자</div>
                                     </div>
                                     """
                                     
