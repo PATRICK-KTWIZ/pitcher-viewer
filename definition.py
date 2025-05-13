@@ -86,7 +86,7 @@ def season_pitchname(player_df):
     season_pitchname_df = stats_df(merged_base_df)
 
     season_pitchname_df = season_pitchname_df.reindex([2025, 2024, 2023], level='game_year')
-    season_pitchname_df = season_pitchname_df.reindex(['4-Seam Fastball','2-Seam Fastball','Cutter','Slider','Curveball','Changeup','Split-Finger'], level='pitch_name')
+    season_pitchname_df = season_pitchname_df.reindex(['4-Seam Fastball','2-Seam Fastball','Cutter','Slider','Sweeper', 'Curveball','Changeup','Split-Finger'], level='pitch_name')
 
     season_pitchname_df = season_pitchname_df.reset_index()
     season_pitchname_df = season_pitchname_df.astype({'game_year':'str'})
@@ -205,7 +205,7 @@ def movement_dataframe(dataframe):
 
     # 인덱스 재정렬
     grouped_df = grouped_df.reindex([2025, 2024, 2023], level='game_year')
-    grouped_df = grouped_df.reindex(['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Curveball', 'Sweeper', 'Changeup', 'Split-Finger'], level='pitch_name')
+    grouped_df = grouped_df.reindex(['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider',  'Sweeper', 'Curveball','Changeup', 'Split-Finger'], level='pitch_name')
 
     grouped_df = grouped_df.reset_index()
     grouped_df = grouped_df.rename(columns={'game_year':'연도','pitch_name':'구종','pitname':'투구수','rel_speed(km)':'평균구속', 'release_spin_rate':'평균회전수','ver_break':'수직Mov','hor_break':'수평Mov',
