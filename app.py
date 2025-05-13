@@ -987,12 +987,12 @@ def show_main_page():
                     st.subheader(f"{pitcher_name}, {year}")
                     
                     col1, col2 = st.columns(2)
-                    
+                                        
                     with col1:
                         st.write(f"**{year}**")
                         year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == year]
                         year_fig = season_pitchtrack_chart(year_df)
-                        st.plotly_chart(year_fig, layout="wide", key=f"season_pitched_{pitcher}")
+                        st.plotly_chart(year_fig, layout="wide", key=f"season_pitched_{pitcher}_latest")
                 
                 st.markdown(""" <div style="text-align: right; font-size: 0.9em;">
                                 <span style="font-weight: bold;">색상 범례:</span> 
