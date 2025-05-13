@@ -282,7 +282,7 @@ def season_pitched_fig(dataframe):
 
     return season_pitched_fig
 
-def season_location_fig(dataframe, pitch_name, width=250, height=600):
+def season_location_fig(dataframe, pitch_name, width=270, height=600):
     """
     투구 데이터를 구종별, 타자 스탠스별로 시각화하는 함수
     
@@ -292,9 +292,9 @@ def season_location_fig(dataframe, pitch_name, width=250, height=600):
         투구 데이터가 포함된 데이터프레임
     pitch_name : str
         구종 이름 (차트 제목으로 사용)
-    width : int, optional (default=250)
+    width : int, optional (default=270)
         차트 너비
-    height : int, optional (default=400)
+    height : int, optional (default=600)
         차트 높이
     
     Returns:
