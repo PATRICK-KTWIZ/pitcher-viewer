@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 def season_movement_chart(dataframe):
 
     fig = px.scatter(dataframe, x="hor_break", y="ver_break", color="pitch_name",
-                 category_orders = {"pitch_name" : ['4-Seam Fastball','2-Seam Fastball','Cutter','Slider','Curveball','Changeup','Split-Finger','Sweeper']},
+                 category_orders = {"pitch_name" : ['4-Seam Fastball','2-Seam Fastball','Cutter','Slider','Sweeper','Curveball','Changeup','Split-Finger']},
                  color_discrete_map={
                 "4-Seam Fastball": "red",
                 "2-Seam Fastball": "pink",
