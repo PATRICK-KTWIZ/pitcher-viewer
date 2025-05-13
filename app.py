@@ -1404,7 +1404,7 @@ def show_main_page():
                         available_pitches = current_year_df['pitch_name'].unique().tolist()
                         
                         # 원하는 순서의 구종 목록
-                        desired_order = ['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Curveball', 'Changeup', 'Split-Finger', 'Sweeper']
+                        desired_order = ['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Sweeper', 'Curveball', 'Changeup', 'Split-Finger']
                         
                         # 실제 데이터에 있는 구종만 필터링하여 순서 지정
                         ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
