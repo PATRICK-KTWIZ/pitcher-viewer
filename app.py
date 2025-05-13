@@ -1186,7 +1186,7 @@ def show_main_page():
                         
                         # 좌측 라벨 (좌타자/우타자) 추가
                         label_html = """
-                        <div style="display: inline-block; width: 50px; height: 800px; vertical-align: top; padding-top: 200px;">
+                        <div style="display: inline-block; width: 50px; height: 900px; vertical-align: top; padding-top: 200px;">
                             <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 80px;">우타자</div>
                             <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 230px;">좌타자</div>
                         </div>
