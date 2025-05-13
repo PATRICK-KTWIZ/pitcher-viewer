@@ -1256,11 +1256,12 @@ def show_main_page():
                                     for pitch_name, fig in pitch_figures.items():
                                         fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
                                         html_components.append(f"""
-                                        <div style="display: inline-block; width: 300px; height: 700px; margin-right: 5px;">
+                                        <div style="display: inline-block; width: 270px; height: 600px; margin-right: 0px;">
                                             <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
                                             {fig_html}
                                         </div>
                                         """)
+
                                     
                                     # 좌측 라벨 (좌타자/우타자) 추가
                                     label_html = """
