@@ -395,7 +395,7 @@ def show_main_page():
 
         player_id = find_id(player_dataset, select_player)
         
-        option = st.sidebar.selectbox('리그 선택', ("-", "KBO(1군)", "KBO(2군)", "AAA","KBA(아마)"))
+        option = st.sidebar.selectbox('리그 선택', ("-", "KBO(1군)", "KBO(2군)", "AAA(마이너)","KBA(아마)"))
 
 
         # Create a session_state variable to store selected player information
