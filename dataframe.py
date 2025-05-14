@@ -672,42 +672,64 @@ def dataframe(level, player_id, password):
 
         ndf['month'] = ndf['game_date'].dt.month
 
-        start18 = '2018-04-01'
-        end18 = '2018-10-18'
-        start19 = '2019-03-23'
-        end19 = '2019-10-01'
-        start20 = '2020-05-05'
-        end20 = '2020-10-31'
-        start21 = '2021-04-03'
-        end21 = '2021-10-30'
-        start22 = '2022-04-02'
-        end22 = '2022-10-11'
-        start23 = '2023-04-01'
-        end23 = '2023-10-30'
-        start24 = '2024-03-23'
-        end24 = '2024-10-01'        
-        start25 = '2025-03-22'
-        end25 = '2025-10-01'    
-
-        season18 = ndf[(ndf['game_date'] >= start18) & (ndf['game_date'] <= end18)]
-        season19 = ndf[(ndf['game_date'] >= start19) & (ndf['game_date'] <= end19)]
-        season20 = ndf[(ndf['game_date'] >= start20) & (ndf['game_date'] <= end20)]
-        season21 = ndf[(ndf['game_date'] >= start21) & (ndf['game_date'] <= end21)]
-        season22 = ndf[(ndf['game_date'] >= start22) & (ndf['game_date'] <= end22)]
-        season23 = ndf[(ndf['game_date'] >= start23) & (ndf['game_date'] <= end23)]
-        season24 = ndf[(ndf['game_date'] >= start24) & (ndf['game_date'] <= end24)]
-        season25 = ndf[(ndf['game_date'] >= start25) & (ndf['game_date'] <= end25)]
-
-        ndf = pd.concat([season18, season19, season20, season21, season22, season23, season24, season25], ignore_index=True)
-
-        player_df = ndf
-
+        # 리그 레벨에 따라 다른 시즌 날짜 적용
+        if level == 'KBO':
+            
+            start18 = '2018-04-01'
+            end18 = '2018-10-18'
+            start19 = '2019-03-23'
+            end19 = '2019-10-01'
+            start20 = '2020-05-05'
+            end20 = '2020-10-31'
+            start21 = '2021-04-03'
+            end21 = '2021-10-30'
+            start22 = '2022-04-02'
+            end22 = '2022-10-11'
+            start23 = '2023-04-01'
+            end23 = '2023-10-30'
+            start24 = '2024-03-23'
+            end24 = '2024-10-01'        
+            start25 = '2025-03-22'
+            end25 = '2025-10-01'    
+        
+            season18 = ndf[(ndf['game_date'] >= start18) & (ndf['game_date'] <= end18)]
+            season19 = ndf[(ndf['game_date'] >= start19) & (ndf['game_date'] <= end19)]
+            season20 = ndf[(ndf['game_date'] >= start20) & (ndf['game_date'] <= end20)]
+            season21 = ndf[(ndf['game_date'] >= start21) & (ndf['game_date'] <= end21)]
+            season22 = ndf[(ndf['game_date'] >= start22) & (ndf['game_date'] <= end22)]
+            season23 = ndf[(ndf['game_date'] >= start23) & (ndf['game_date'] <= end23)]
+            season24 = ndf[(ndf['game_date'] >= start24) & (ndf['game_date'] <= end24)]
+            season25 = ndf[(ndf['game_date'] >= start25) & (ndf['game_date'] <= end25)]
+        
+            player_df = pd.concat([season18, season19, season20, season21, season22, season23, season24, season25], ignore_index=True)
+        
+        elif level == 'KBO_Minor':
+            # KBO_Minor 리그의 시즌 날짜 설정
+            start23 = '2023-04-04'
+            end23 = '2023-09-24'
+            start24 = '2024-03-26'
+            end24 = '2024-10-05'
+            start25 = '2025-03-14'
+            end25 = '2025-10-01'
+            
+            # 각 시즌 데이터 필터링
+            season23 = ndf[(ndf['game_date'] >= start23) & (ndf['game_date'] <= end23)]
+            season24 = ndf[(ndf['game_date'] >= start24) & (ndf['game_date'] <= end24)]
+            season25 = ndf[(ndf['game_date'] >= start25) & (ndf['game_date'] <= end25)]
+            
+            # 필터링된 데이터 합치기
+            player_df = pd.concat([season23, season24, season25], ignore_index=True)
+        else:
+            # 다른 리그의 경우 기본적으로 원본 데이터 사용
+            player_df = ndf
+        
+        # 공통 처리
         player_df = player_df.reset_index(drop=True)
         player_df['game_date'] = pd.to_datetime(player_df['game_date'])
-
+        
     else:
         raise ValueError("데이터가 존재하지 않습니다.")
-    
+            
     return player_df
     
 
