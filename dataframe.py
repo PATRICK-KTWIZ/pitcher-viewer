@@ -524,7 +524,7 @@ def dataframe(level, player_id, password):
         df['plus_lsa4'] = df['launch_speed_angle'].apply(lambda x: 1 if x >=4 else None)
         df['cs'] = df['description'].apply(lambda x: 1 if x == 'called_strike' else None)
 
-        github용
+        # github용
         df['game_date'] = pd.to_datetime(df['game_date'], format='mixed', dayfirst=True)
 
         # # vscode용
