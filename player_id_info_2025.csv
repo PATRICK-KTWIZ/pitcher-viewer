@@ -907,50 +907,50 @@ game_year,team,team_tm_major,team_tm_minor,KBO_ID,TM_ID,NAME,POS,BackNum,engName
 2025,한화,HAN_EAG,MIN_HAN,54729,54729,황준서,P,29,"Hwang, Jun Seo",20050822,185,78,Left,Left
 2025,Atlanta Braves,-,-,-,686249,Nathan Wiles(RHP),P,-,-,-,-,-,-,-
 2025,Boston Red Sox,-,-,-,476594,Robert Stock(RHP),P,-,-,-,-,-,-,-
-2025,Boston Red Sox,-,-,-,647351,"Abraham Toro(2B, S)",IF,-,-,-,-,-,-,-
+2025,Boston Red Sox,-,-,-,647351,Abraham Toro(2B, S),IF,-,-,-,-,-,-,-
 2025,Chicago White Sox,-,-,-,643290,Justin Dunn(RHP),P,-,-,-,-,-,-,-
-2025,Chicago White Sox,-,-,-,641943,"Joshua Palacios(RF, LHH)",OF,-,-,-,-,-,-,-
-2025,Chicago White Sox,-,-,-,667452,"Corey Julks(LF, RHH)",OF,-,-,-,-,-,-,-
-2025,Chicago White Sox,-,-,-,666150,"Dominic Fletcher(CF, LHH)",OF,-,-,-,-,-,-,-
+2025,Chicago White Sox,-,-,-,641943,Joshua Palacios(RF, LHH),OF,-,-,-,-,-,-,-
+2025,Chicago White Sox,-,-,-,667452,Corey Julks(LF, RHH),OF,-,-,-,-,-,-,-
+2025,Chicago White Sox,-,-,-,666150,Dominic Fletcher(CF, LHH),OF,-,-,-,-,-,-,-
 2025,Chicago White Sox,-,-,-,656457,Tyler Gilbert(LHP),P,-,-,-,-,-,-,-
 2025,Chicago White Sox,-,-,-,669060,Bryse Wilson(RHP),P,-,-,-,-,-,-,-
 2025,Chicago White Sox,-,-,-,669391,Owen White(RHP),P,-,-,-,-,-,-,-
-2025,Cincinnati Reds,-,-,-,666181,"Will Benson(CF, LHH)",OF,-,-,-,-,-,-,-
-2025,Cincinnati Reds,-,-,-,688005,"Francisco Urbaez(2B, RHH)",IF,-,-,-,-,-,-,-
+2025,Cincinnati Reds,-,-,-,666181,Will Benson(CF, LHH),OF,-,-,-,-,-,-,-
+2025,Cincinnati Reds,-,-,-,688005,Francisco Urbaez(2B, RHH),IF,-,-,-,-,-,-,-
 2025,Cincinnati Reds,-,-,-,686730,Carson Spiers(RHP),P,-,-,-,-,-,-,-
-2025,Cleveland Guardians,-,-,-,671286,"Johnathan Rodriguez(LF, LHH)",OF,-,-,-,-,-,-,-
+2025,Cleveland Guardians,-,-,-,671286,Johnathan Rodriguez(LF, LHH),OF,-,-,-,-,-,-,-
 2025,Detroit Tigers,-,-,-,657424,Matt Gage(LHP),P,-,-,-,-,-,-,-
-2025,Detroit Tigers,-,-,-,592325,"Ben Gamel(RF, LHH)",OF,-,-,-,-,-,-,-
-2025,Detroit Tigers,-,-,-,676551,"Brewer Hicklen(LF, RHH)",OF,-,-,-,-,-,-,-
-2025,Detroit Tigers,-,-,-,676632,"Bligh Madris(1B, LHH)",IF,-,-,-,-,-,-,-
+2025,Detroit Tigers,-,-,-,592325,Ben Gamel(RF, LHH),OF,-,-,-,-,-,-,-
+2025,Detroit Tigers,-,-,-,676551,Brewer Hicklen(LF, RHH),OF,-,-,-,-,-,-,-
+2025,Detroit Tigers,-,-,-,676632,Bligh Madris(1B, LHH),IF,-,-,-,-,-,-,-
 2025,Detroit Tigers,-,-,-,679712,Lael Lockhart(LHP),P,-,-,-,-,-,-,-
-2025,Kansas City Royals,-,-,-,670231,"John Rave(CF, LHH)",OF,-,-,-,-,-,-,-
+2025,Kansas City Royals,-,-,-,670231,John Rave(CF, LHH),OF,-,-,-,-,-,-,-
 2025,Philadelphia Phillies,-,-,-,667725,Kyle Tyler(RHP),P,-,-,-,-,-,-,-
 2025,LA Angels,-,-,-,641312,Shaun Anderson(RHP),P,-,-,-,-,-,-,-
-2025,LA Angels,-,-,-,676116,"Ryan Noda(1B, LHH)",IF,-,-,-,-,-,-,-
-2025,LA Angels,-,-,-,664068,"Scott Kingery(SS, RHH)",IF,-,-,-,-,-,-,-
-2025,LA Angels,-,-,-,666198,"Carter Kieboom(3B, RHH)",IF,-,-,-,-,-,-,-
-2025,LA Dodgers,-,-,-,669899,"Ryan Ward(1B, LHH)",IF,-,-,-,-,-,-,-
+2025,LA Angels,-,-,-,676116,Ryan Noda(1B, LHH),IF,-,-,-,-,-,-,-
+2025,LA Angels,-,-,-,664068,Scott Kingery(SS, RHH),IF,-,-,-,-,-,-,-
+2025,LA Angels,-,-,-,666198,Carter Kieboom(3B, RHH),IF,-,-,-,-,-,-,-
+2025,LA Dodgers,-,-,-,669899,Ryan Ward(1B, LHH),IF,-,-,-,-,-,-,-
 2025,LA Dodgers,-,-,-,687941,Alex Gamboa(LHP),P,-,-,-,-,-,-,-
 2025,LA Dodgers,-,-,-,669422,Matt Sauer(RHP),P,-,-,-,-,-,-,-
 2025,Miami Marlins,-,-,-,676083,Janson Junk(RHP),P,-,-,-,-,-,-,-
-2025,Miami Marlins,-,-,-,667472,"Myers Dann(CF, RHH)",OF,-,-,-,-,-,-,-
-2025,Miami Marlins,-,-,-,669065,"Kyle Stowers(RF, LHH)",OF,-,-,-,-,-,-,-
+2025,Miami Marlins,-,-,-,667472,Myers Dann(CF, RHH),OF,-,-,-,-,-,-,-
+2025,Miami Marlins,-,-,-,669065,Kyle Stowers(RF, LHH),OF,-,-,-,-,-,-,-
 2025,Milwaukee Brewers,-,-,-,660730,Elvin Rodriguez(RHP),P,-,-,-,-,-,-,-
-2025,Minnesota Twins,-,-,-,676812,"Carson McCusker(RF, RHH)",OF,-,-,-,-,-,-,-
+2025,Minnesota Twins,-,-,-,676812,Carson McCusker(RF, RHH),OF,-,-,-,-,-,-,-
 2025,New York Yankees,-,-,-,612797,Erick Leal(RHP),P,-,-,-,-,-,-,-
 2025,New York Yankees,-,-,-,642216,Allan Winans(RHP),P,-,-,-,-,-,-,-
 2025,New York Yankees,-,-,-,663765,Jake Woodford(RHP),P,-,-,-,-,-,-,-
 2025,New York Yankees,-,-,-,605335,Brandon Leibrandt(LHP),P,-,-,-,-,-,-,-
-2025,Philadelphia Phillies,-,-,-,805249,"Otto Kemp(3B, RHH)",IF,-,-,-,-,-,-,-
-2025,Pittsburgh Pirates,-,-,-,682650,"Malcom Nunez(3B, RHH)",IF,-,-,-,-,-,-,-
+2025,Philadelphia Phillies,-,-,-,805249,Otto Kemp(3B, RHH),IF,-,-,-,-,-,-,-
+2025,Pittsburgh Pirates,-,-,-,682650,Malcom Nunez(3B, RHH),IF,-,-,-,-,-,-,-
 2025,Pittsburgh Pirates,-,-,-,677952,Braxton Ashcraft(RHP),P,-,-,-,-,-,-,-
 2025,San Diego Padres,-,-,-,666785,Harold Chirino(RHP),P,-,-,-,-,-,-,-
-2025,San Diego Padres,-,-,-,660757,"Oscar Gonzalez(RF, RHH)",OF,-,-,-,-,-,-,-
-2025,San Diego Padres,-,-,-,656582,"Connor Joe(1B, RHH)",IF,-,-,-,-,-,-,-
+2025,San Diego Padres,-,-,-,660757,Oscar Gonzalez(RF, RHH),OF,-,-,-,-,-,-,-
+2025,San Diego Padres,-,-,-,656582,Connor Joe(1B, RHH),IF,-,-,-,-,-,-,-
 2025,San Diego Padres,-,-,-,663568,Stephen Kolek(RHP),P,-,-,-,-,-,-,-
 2025,Seattle Mariners,-,-,-,646242,Jhonathan Diaz(LHP),P,-,-,-,-,-,-,-
-2025,St. Louis Cardinals,-,-,-,676480,"Jose Barrero(SS, RHH)",IF,-,-,-,-,-,-,-
+2025,St. Louis Cardinals,-,-,-,676480,Jose Barrero(SS, RHH),IF,-,-,-,-,-,-,-
 2025,Texas Rangers,-,-,-,656641,Jacob Latz(LHP),P,-,-,-,-,-,-,-
 2025,Texas Rangers,-,-,-,605288,Adrian Houser(RHP),P,-,-,-,-,-,-,-
 2025,Texas Rangers,-,-,-,688760,"Blaine Crim(1B, RHH)",IF,-,-,-,-,-,-,-
@@ -958,3 +958,4 @@ game_year,team,team_tm_major,team_tm_minor,KBO_ID,TM_ID,NAME,POS,BackNum,engName
 2025,New York Yankees,-,-,-,672782,Yoendrys Gomez(RHP),P,-,-,-,-,-,-,-
 2025,Texas Rangers,-,-,-,657022,Trey Supak(RHP),P,-,-,-,-,-,-,-
 2025,Milwaukee Brewers,-,-,-,669145,Bruce Zimmermann(LHP),P,-,-,-,-,-,-,-
+2025,Cincinnati Reds,-,-,-,680689,Lyon Richardson(RHP),P,-,-,-,-,-,-,-
