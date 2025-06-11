@@ -673,7 +673,7 @@ def dataframe(level, player_id, password):
         ndf['month'] = ndf['game_date'].dt.month
 
         # 리그 레벨에 따라 다른 시즌 날짜 적용
-        if level == "'KoreaBaseballOrganization'":
+        if level == 'KoreaBaseballOrganization':
             
             start18 = '2018-04-01'
             end18 = '2018-10-18'
@@ -703,7 +703,7 @@ def dataframe(level, player_id, password):
         
             player_df = pd.concat([season18, season19, season20, season21, season22, season23, season24, season25], ignore_index=True)
         
-        elif level == "'KBO Minors'":
+        elif level == 'KBO Minors':
             # KBO_Minor 리그의 시즌 날짜 설정
             start23 = '2023-04-04'
             end23 = '2023-09-24'
