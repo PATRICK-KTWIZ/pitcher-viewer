@@ -495,7 +495,7 @@ def show_main_page():
                 pitcher_finder = selected_player_df[selected_player_df['TM_ID'] == pitcher_str]
                 pitcher_name = pitcher_finder.iloc[0]['NAME']                
 
-                with st.expander(f"상세기록:  {pitcher_name}"):
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
                     st.dataframe(stats_viewer_df, width=1500)
 
 #-------------------------------------------------------------------------------------------------------
@@ -543,7 +543,7 @@ def show_main_page():
                 pitcher_finder = selected_player_df[selected_player_df['TM_ID'] == pitcher_str]
                 pitcher_name = pitcher_finder.iloc[0]['NAME']                
 
-                with st.expander(f"상세기록:  {pitcher_name}"):
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
                     st.dataframe(swing_viewer_df, width=1500)
 
             
@@ -611,7 +611,7 @@ def show_main_page():
                 pitcher_finder = selected_player_df[selected_player_df['TM_ID'] == pitcher_str]
                 pitcher_name = pitcher_finder.iloc[0]['NAME']                
 
-                with st.expander(f"상세기록:  {pitcher_name}"):
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
                     st.dataframe(stats_viewer_df, width=1600)
 
 
@@ -663,7 +663,7 @@ def show_main_page():
                 pitcher_finder = selected_player_df[selected_player_df['TM_ID'] == pitcher_str]
                 pitcher_name = pitcher_finder.iloc[0]['NAME']                
 
-                with st.expander(f"상세기록:  {pitcher_name}"):
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
                     st.dataframe(swing_viewer_df, width=1600)
 
             st.divider()
@@ -718,7 +718,7 @@ def show_main_page():
                 pitcher_finder = selected_player_df[selected_player_df['TM_ID'] == pitcher_str]
                 pitcher_name = pitcher_finder.iloc[0]['NAME']                
 
-                with st.expander(f"상세기록:  {pitcher_name}"):
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
                     st.dataframe(stats_viewer_df, width=1600)
 
 # # -------------------------------------------------------------------------------------------------------
@@ -769,7 +769,7 @@ def show_main_page():
                 pitcher_finder = selected_player_df[selected_player_df['TM_ID'] == pitcher_str]
                 pitcher_name = pitcher_finder.iloc[0]['NAME']                
 
-                with st.expander(f"상세기록:  {pitcher_name}"):
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
                     st.dataframe(swing_viewer_df, width=1600)
 
             st.divider()
@@ -824,7 +824,7 @@ def show_main_page():
                 pitcher_finder = selected_player_df[selected_player_df['TM_ID'] == pitcher_str]
                 pitcher_name = pitcher_finder.iloc[0]['NAME']                
 
-                with st.expander(f"상세기록:  {pitcher_name}"):
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
                     st.dataframe(stats_viewer_df, width=1600)
 
 # # -------------------------------------------------------------------------------------------------------
@@ -875,7 +875,7 @@ def show_main_page():
                 pitcher_finder = selected_player_df[selected_player_df['TM_ID'] == pitcher_str]
                 pitcher_name = pitcher_finder.iloc[0]['NAME']                
 
-                with st.expander(f"상세기록:  {pitcher_name}"):
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
                     st.dataframe(swing_viewer_df, width=1600)
 
             st.divider()
@@ -926,7 +926,7 @@ def show_main_page():
                 
                 # 이전 연도가 있을 경우에만 expander 표시
                 if previous_years:
-                    with st.expander(f"연도별: {pitcher_name}"):
+                    with st.expander(f"연도별 현황황: {pitcher_name}"):
                         # 최신 연도를 제외한 각 연도별로 그래프 표시
                         for year_idx, year in enumerate(previous_years):
                             st.subheader(f"{pitcher_name}, {year}")
@@ -1222,7 +1222,7 @@ def show_main_page():
                     
                     # 이전 연도 데이터를 expander에 표시
                     if len(years) > 1:
-                        with st.expander((f"연도별: {pitcher_name}")):
+                        with st.expander((f"연도별 현황: {pitcher_name}")):
                             for year in years[1:]:
                                 st.subheader(f"{year}년 시즌")
                                 
@@ -1354,7 +1354,7 @@ def show_main_page():
                     
                     # 이전 연도 데이터를 expander에 표시
                     if len(years) > 1:
-                        with st.expander(f"연도별: {pitcher_name}"):
+                        with st.expander(f"연도별 현황황: {pitcher_name}"):
                             for year in years[1:]:
                                 st.subheader(f"{year}년 시즌")
                                 
@@ -1431,7 +1431,7 @@ def show_main_page():
                     
                     # 이전 연도 데이터를 expander에 표시
                     if len(years) > 1:
-                        with st.expander(f"연도별: {pitcher_name}"):
+                        with st.expander(f"연도별 현황황: {pitcher_name}"):
                             for year in years[1:]:
                                 st.subheader(f"{year}년 시즌")
                                 
