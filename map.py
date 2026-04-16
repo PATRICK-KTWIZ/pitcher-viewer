@@ -1,361 +1,218 @@
 import pandas as pd
-import streamlit as st
 from datetime import timedelta
+from dataframe import dataframe, base_df, stats_df, pivot_base_df
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import numpy as np
+# from IPython.display import display, HTML
 
-PITCH_ORDER = [
-    "4-Seam Fastball", "2-Seam Fastball", "Cutter", "Slider",
-    "Sweeper", "Curveball", "Changeup", "Split-Finger",
-]
-COLOR_MAP = {
-    "4-Seam Fastball": "red",
-    "2-Seam Fastball": "pink",
-    "Cutter":          "purple",
-    "Slider":          "green",
-    "Changeup":        "blue",
-    "Curveball":       "orange",
-    "Split-Finger":    "brown",
-    "Sweeper":         "gold",
-}
-YEAR_COLORS = ["#E63946", "#2196F3", "#FF9800", "#4CAF50", "#9C27B0", "#00BCD4"]
+def select_league(option):
 
-# ════════════════════════════════════════════════════════════
-# 공통 축 / 레이아웃 헬퍼
-# ════════════════════════════════════════════════════════════
-def _movement_axis_lines(fig):
-    for v in [-80, -60, -40, -20, 20, 40, 60, 80]:
-        fig.add_vline(x=v, line_width=0.7, line_dash="dash",
-                      line_color="rgba(108,122,137,0.8)")
-        fig.add_hline(y=v, line_width=0.7, line_dash="dash",
-                      line_color="rgba(108,122,137,0.8)")
-    fig.add_vline(x=0, line_width=2, line_color="rgba(108,122,137,0.8)")
-    fig.add_hline(y=0, line_width=2, line_color="rgba(108,122,137,0.8)")
-    return fig
+    if option == "KBO(1군)":
+        league = "'KoreaBaseballOrganization'"
+        return league
+    elif option == "KBO(2군)":
+        league = "'KBO Minors'"
+        return league
+    elif option == "AAA(마이너)":
+        league =  "'aaa'"
+        return league
+    elif option == "KBA(아마)":
+        league =  "'TeamExclusive'"
+        return league
+    else:
+        league == "'KoreaBaseballOrganization'"
+        return league
 
 
-def _movement_layout(fig, width=600, height=600):
-    fig.update_yaxes(
-        range=[-0.7, 0.7], mirror=True,
-        showline=True, linewidth=1, linecolor="#dbdbdb",
-        ticks="outside", tickwidth=1, tickcolor="#dbdbdb", showgrid=True,
-    )
-    fig.update_xaxes(
-        range=[-0.7, 0.7], mirror=True,
-        showline=True, linewidth=1, linecolor="#dbdbdb",
-        ticks="outside", tickwidth=1, tickcolor="#dbdbdb", showgrid=True,
-    )
-    fig.update_layout(
-        showlegend=True,
-        width=width, height=height,
-        plot_bgcolor="white", paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=30, b=10),
-        shapes=[dict(
-            type="rect", xref="paper", yref="paper",
-            x0=0, y0=0, x1=1, y1=1,
-            line=dict(color="#dbdbdb", width=2),
-        )],
-    )
-    return fig
+def stats(player_df):
+
+    merged_base_df = base_df(player_df)
+    stats_output_df = stats_df(merged_base_df)
+    
+    season_stats_df = stats_output_df.reindex([2025, 2024, 2023])
+
+    return season_stats_df
 
 
-# ════════════════════════════════════════════════════════════
-# 무브먼트 차트 (과거 시즌 회색 처리)
-# ════════════════════════════════════════════════════════════
-def season_movement_chart(dataframe: pd.DataFrame):
-    """
-    최신 시즌은 구종별 컬러, 과거 시즌은 회색(투명도 낮춤)으로 표시.
-    """
-    df = dataframe.copy()
-    if df.empty:
-        return go.Figure()
+def season_stand(player_df):
 
-    latest_year = int(df["game_year"].max())
-    fig = go.Figure()
+    season = player_df['game_year'] >= 2023
+    sdf = player_df[season]
 
-    # ── 과거 시즌 (회색) ────────────────────────────────────
-    past_df = df[df["game_year"] < latest_year]
-    if not past_df.empty:
-        past_years = sorted(past_df["game_year"].unique())
-        for yr in past_years:
-            yr_df = past_df[past_df["game_year"] == yr]
-            fig.add_trace(go.Scatter(
-                x=yr_df["hor_break"],
-                y=yr_df["ver_break"],
-                mode="markers",
-                marker=dict(size=10, color="rgba(180,180,180,0.35)", line=dict(width=0)),
-                name=str(yr),
-                hovertemplate=(
-                    "<b>%{customdata[0]}</b><br>"
-                    "구종: %{customdata[1]}<br>"
-                    "날짜: %{customdata[2]}<br>"
-                    "타자: %{customdata[3]}<br>"
-                    "결과: %{customdata[4]}<extra></extra>"
-                ),
-                customdata=yr_df[["pitname", "pitch_name", "game_date", "batname", "events"]].values,
-            ))
+    pivot_index = 'stand'
 
-    # ── 최신 시즌 (구종별 컬러) ─────────────────────────────
-    latest_df = df[df["game_year"] == latest_year]
-    for pitch in PITCH_ORDER:
-        p_df = latest_df[latest_df["pitch_name"] == pitch]
-        if p_df.empty:
-            continue
-        color = COLOR_MAP.get(pitch, "gray")
-        hover_cols = ["pitname", "pitch_name", "game_date", "batname",
-                      "events", "description"]
-        # 존재하는 컬럼만 사용
-        avail = [c for c in hover_cols if c in p_df.columns]
-        fig.add_trace(go.Scatter(
-            x=p_df["hor_break"],
-            y=p_df["ver_break"],
-            mode="markers",
-            marker=dict(size=14, color=color, opacity=0.85,
-                        line=dict(width=0.5, color="white")),
-            name=f"{pitch} ({latest_year})",
-            hovertemplate=(
-                f"<b>{{{{customdata[0]}}}} · {pitch}</b><br>"
-                "날짜: %{customdata[2]}<br>"
-                "타자: %{customdata[3]}<br>"
-                "결과: %{customdata[4]}<extra></extra>"
-            ),
-            customdata=p_df[avail].values,
-        ))
+    merged_base_df = pivot_base_df(sdf,pivot_index)
+    season_pthrows_df = stats_df(merged_base_df)
 
-    fig = _movement_axis_lines(fig)
-    fig = _movement_layout(fig)
-    fig.update_layout(
-        title=dict(
-            text=f"Movement Chart  <span style='font-size:12px;color:gray'>"
-                 f"(컬러={latest_year} / 회색=과거시즌)</span>",
-            font=dict(size=14),
-        ),
-        legend=dict(
-            orientation="h", yanchor="bottom", y=1.01,
-            xanchor="left", x=0, font=dict(size=10),
-        ),
-    )
-    return fig
+    season_pthrows_df = season_pthrows_df.reindex([2025, 2024, 2023], level='game_year')
+    season_pthrows_df = season_pthrows_df.reindex(['R','L'], level='stand')
+
+    season_pthrows_df = season_pthrows_df.reset_index()
+    season_pthrows_df = season_pthrows_df.astype({'game_year':'str'})
+
+    return season_pthrows_df
 
 
-# ════════════════════════════════════════════════════════════
-# 피치 트래킹 차트
-# ════════════════════════════════════════════════════════════
-def season_pitchtrack_chart(dataframe):
-    sdf = dataframe
+def season_stand_pitchname(player_df):
 
-    zone = pd.DataFrame(dict(
-        x=[-0.23, 0.23, 0.23, -0.23, -0.23],
-        y=[0.45,  0.45, 1.05, 1.05,  0.45],
-    ))
-    tracey = [0, 1.524, 3.048, 4.572, 6.096, 7.62,
-              9.114, 10.668, 12.192, 13.716, 15.24]
+    season = player_df['game_year'] >= 2023
+    sdf = player_df[season]
 
-    XL, XR, ZB, ZT = -0.23, 0.23, 0.45, 1.05
-    ZX = [XL, XL, XR, XR, XL]
-    ZY = [0, 0, 0, 0, 0]
-    ZZ = [ZB, ZT, ZT, ZB, ZB]
+    pivot_index = ['stand', 'pitch_name']
 
-    fig = go.Figure()
+    merged_base_df = pivot_base_df(sdf,pivot_index)
+    season_stand_pitchname_df = stats_df(merged_base_df)
 
-    pitch_groups = {
-        "4-Seam Fastball": sdf[sdf.pitch_name == "4-Seam Fastball"],
-        "2-Seam Fastball": sdf[sdf.pitch_name == "2-Seam Fastball"],
-        "Cutter":          sdf[sdf.pitch_name == "Cutter"],
-        "Slider":          sdf[sdf.pitch_name == "Slider"],
-        "Sweeper":         sdf[sdf.pitch_name == "Sweeper"],
-        "Curveball":       sdf[sdf.pitch_name == "Curveball"],
-        "Changeup":        sdf[sdf.pitch_name == "Changeup"],
-        "Split-Finger":    sdf[sdf.pitch_name == "Split-Finger"],
+    season_stand_pitchname_df = season_stand_pitchname_df.reindex([2025, 2024, 2023], level='game_year')
+    season_stand_pitchname_df = season_stand_pitchname_df.reindex(['R','L'], level='stand')
+    season_stand_pitchname_df = season_stand_pitchname_df.reindex(['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Sweeper', 'Curveball', 'Changeup', 'Split-Finger'], level='pitch_name')
+
+    season_stand_pitchname_df = season_stand_pitchname_df.reset_index()
+    season_stand_pitchname_df = season_stand_pitchname_df.astype({'game_year':'str'})
+
+    return season_stand_pitchname_df
+
+
+def season_pitchname(player_df):
+
+    season = player_df['game_year'] >= 2023
+    sdf = player_df[season]
+
+    pivot_index = 'pitch_name'
+
+    merged_base_df = pivot_base_df(sdf,pivot_index)
+    season_pitchname_df = stats_df(merged_base_df)
+
+    season_pitchname_df = season_pitchname_df.reindex([2025, 2024, 2023], level='game_year')
+    season_pitchname_df = season_pitchname_df.reindex(['4-Seam Fastball','2-Seam Fastball','Cutter','Slider','Sweeper', 'Curveball','Changeup','Split-Finger'], level='pitch_name')
+
+    season_pitchname_df = season_pitchname_df.reset_index()
+    season_pitchname_df = season_pitchname_df.astype({'game_year':'str'})
+
+    return season_pitchname_df
+
+
+def stats_viewer(dataframe):
+
+    stats_viewer_df = dataframe[['game_date', 'pitname','pa','ab','hit','walk','strikeout','inplay_pit','exit_velocity','launch_angleX','obp','slg','avg','ops','weak','topped','under','flare','solid_contact','barrel']]
+    stats_viewer_df = stats_viewer_df.rename(columns={'game_year':'구분','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'피안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'인플레이/투구','avg':'피안타율','obp':'피출루율','slg':'피장타율','ops':'피OPS', 'exit_velocity':'허용타구속도','launch_angleX':'허용발사각도',
+                                                      'weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel'})
+
+    return stats_viewer_df
+
+def swing_viewer(dataframe):
+
+    swing_viewer_df = dataframe[['z%','z_swing%','z_con%', 'z_inplay%', 'o%','o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%','inplay_sw',
+                                'plus_lsa4', 'approach']]
+    swing_viewer_df = swing_viewer_df.rename(columns={'game_year':'구분',
+                                                        'z%':'존투구%','z_swing%':'존스윙%','z_con%':'존컨택%', 'z_inplay%':'존인플레이%', 
+                                                        'o%':'존외부%','o_swing%':'존외스윙%', 'o_con%':'존외컨택%', 'o_inplay%':'존외인플레이%', 
+                                                        'f_swing%':'초구스윙%', 'swing%':'스윙%', 'whiff%':'헛스윙%','inplay_sw':'스윙당인플레이%',
+                                                        'plus_lsa4':'LSA 4+', 'approach':'상대타격 어프로치'})
+
+    return swing_viewer_df
+
+def stats_viewer_stand(dataframe):
+
+    stats_viewer_pthrows_df = dataframe[['stand','game_date','pitname','pa','ab','hit','walk','strikeout','inplay_pit','exit_velocity','launch_angleX','obp','slg','avg','ops','weak','topped','under','flare','solid_contact','barrel']]
+    
+    stats_viewer_pthrows_df = stats_viewer_pthrows_df.rename(columns={'game_year':'구분','stand':'타자유형','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'인플레이/투구','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
+                                                        'exit_velocity':'타구속도','launch_angleX':'발사각도','hit_spin_rate':'타구스핀량'})
+
+    return stats_viewer_pthrows_df
+
+def swing_viewer_stand(dataframe):
+
+    swing_viewer_pthrows_df = dataframe[['stand','z%','z_swing%','z_con%', 'z_inplay%', 'o%','o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%','inplay_sw',
+                                'plus_lsa4', 'approach']]
+    swing_viewer_pthrows_df = swing_viewer_pthrows_df.rename(columns={'game_year':'구분','stand':'타자유형',
+                                                        'z%':'존투구%','z_swing%':'존스윙%','z_con%':'존컨택%', 'z_inplay%':'존인플레이%', 
+                                                        'o%':'존외부%','o_swing%':'존외스윙%', 'o_con%':'존외컨택%', 'o_inplay%':'존외인플레이%', 
+                                                        'f_swing%':'초구스윙%', 'swing%':'스윙%', 'whiff%':'헛스윙%','inplay_sw':'스윙당인플레이%',
+                                                        'plus_lsa4':'LSA 4+', 'approach':'타격 어프로치'})
+
+    return swing_viewer_pthrows_df
+
+
+def stats_viewer_stand_pitchname(dataframe):
+
+    stats_viewer_stand_pitchname_df = dataframe[['stand','pitch_name','game_date','pitname','pa','ab','hit','walk','strikeout','inplay_pit','exit_velocity','launch_angleX','obp','slg','avg','ops','weak','topped','under','flare','solid_contact','barrel']]
+    
+    stats_viewer_stand_pitchname_df = stats_viewer_stand_pitchname_df.rename(columns={'game_year':'구분','stand':'타자유형','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'인플레이/투구','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
+                                                        'exit_velocity':'타구속도','launch_angleX':'발사각도','hit_spin_rate':'타구스핀량'})
+
+    return stats_viewer_stand_pitchname_df
+
+def swing_viewer_stand_pitchname(dataframe):
+
+    stats_viewer_stand_pitchname_df = dataframe[['stand','pitch_name','z%','z_swing%','z_con%', 'z_inplay%', 'o%','o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%','inplay_sw',
+                                'plus_lsa4', 'approach']]
+    stats_viewer_stand_pitchname_df = stats_viewer_stand_pitchname_df.rename(columns={'game_year':'구분','stand':'타자유형',
+                                                        'z%':'존투구%','z_swing%':'존스윙%','z_con%':'존컨택%', 'z_inplay%':'존인플레이%', 
+                                                        'o%':'존외부%','o_swing%':'존외스윙%', 'o_con%':'존외컨택%', 'o_inplay%':'존외인플레이%', 
+                                                        'f_swing%':'초구스윙%', 'swing%':'스윙%', 'whiff%':'헛스윙%','inplay_sw':'스윙당인플레이%',
+                                                        'plus_lsa4':'LSA 4+', 'approach':'타격 어프로치'})
+
+    return stats_viewer_stand_pitchname_df
+
+
+def stats_viewer_pitchname(dataframe):
+
+    stats_viewer_pitchname_df = dataframe[['pitch_name','pitname','pa','ab','hit','walk','strikeout','inplay_pit','exit_velocity','launch_angleX','obp','slg','avg','ops','weak','topped','under','flare','solid_contact','barrel']]
+    stats_viewer_pitchname_df = stats_viewer_pitchname_df.rename(columns={'game_year':'구분','pitch_name':'세부구종','game_date':'경기수','pitname':'투구수','pa':'타석','ab':'타수','hit':'안타','walk':'볼넷','strikeout':'삼진','inplay_pit':'인플레이/투구','avg':'타율','obp':'출루율','slg':'장타율','ops':'OPS','weak':'Weak','topped':'Topped','under':'Under','flare':'Flare','solid_contact':'Solid Contact','barrel':'Barrel',
+                                                        'exit_velocity':'타구속도','launch_angleX':'발사각도','hit_spin_rate':'타구스핀량'})
+
+    return stats_viewer_pitchname_df
+
+def swing_viewer_pitchname(dataframe):
+
+    swing_viewer_pitchname_df = dataframe[['pitch_name','z%','z_swing%','z_con%', 'z_inplay%', 'o%','o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%','inplay_sw',
+                                'plus_lsa4', 'approach']]
+    swing_viewer_pitchname_df = swing_viewer_pitchname_df.rename(columns={'game_year':'구분','pitch_name':'세부구종',
+                                                        'z%':'존투구%','z_swing%':'존스윙%','z_con%':'존컨택%', 'z_inplay%':'존인플레이%', 
+                                                        'o%':'존외부%','o_swing%':'존외스윙%', 'o_con%':'존외컨택%', 'o_inplay%':'존외인플레이%', 
+                                                        'f_swing%':'초구스윙%', 'swing%':'스윙%', 'whiff%':'헛스윙%','inplay_sw':'스윙당인플레이%',
+                                                        'plus_lsa4':'LSA 4+', 'approach':'타격 어프로치'})
+
+    return swing_viewer_pitchname_df
+
+
+def movement_dataframe(dataframe):
+
+    mov_df = dataframe
+    agg_funcs = {
+    'pitname': 'count',
+    'rel_speed(km)': 'mean',
+    'release_spin_rate': 'mean',
+    'ver_break': 'mean',
+    'hor_break': 'mean',
+    'rel_height': 'mean',
+    'rel_side': 'mean',
+    'extension': 'mean'
+
     }
 
-    for pitch_name, p_df in pitch_groups.items():
-        if p_df.empty:
-            continue
-        color = COLOR_MAP.get(pitch_name, "gray")
-        avail_hover = [c for c in ["pitname", "rel_speed(km)", "pitch_name",
-                                    "game_date", "batname", "events",
-                                    "exit_velocity", "description",
-                                    "launch_speed_angle", "launch_angle"]
-                       if c in p_df.columns]
-        fig.add_trace(go.Scatter3d(
-            x=p_df["rel_pos_x"] if "rel_pos_x" in p_df.columns else [],
-            y=p_df["rel_pos_y"] if "rel_pos_y" in p_df.columns else [],
-            z=p_df["rel_pos_z"] if "rel_pos_z" in p_df.columns else [],
-            mode="markers",
-            marker=dict(size=3, color=color, opacity=0.6),
-            name=pitch_name,
-        ))
+    grouped_df = mov_df.groupby(['game_year', 'pitch_name']).agg(agg_funcs)
 
-    # 스트라이크 존
-    fig.add_trace(go.Scatter3d(
-        x=ZX, y=ZY, z=ZZ,
-        mode="lines",
-        line=dict(color="black", width=3),
-        name="Strike Zone",
-        showlegend=False,
-    ))
-
-    fig.update_layout(
-        scene=dict(
-            xaxis=dict(range=[-0.5, 0.5], title="X"),
-            yaxis=dict(range=[0, 18],     title="Distance"),
-            zaxis=dict(range=[0, 2.5],    title="Z"),
-            aspectmode="manual",
-            aspectratio=dict(x=1, y=3, z=1),
-        ),
-        width=700, height=600,
-        margin=dict(l=0, r=0, t=30, b=0),
-        paper_bgcolor="white",
-    )
-    return fig
+    grouped_df['ver_break'] =  grouped_df['ver_break'] * 100
+    grouped_df['hor_break'] =  grouped_df['hor_break'] * 100
 
 
-# ════════════════════════════════════════════════════════════
-# 구종 비율 차트
-# ════════════════════════════════════════════════════════════
-def season_pitched_fig(dataframe):
-    df = dataframe.copy()
-    if df.empty:
-        return go.Figure()
+    # 반올림
+    grouped_df = grouped_df.round({'rel_speed(km)': 1, 'release_spin_rate': 0, 'ver_break':1,'hor_break':1,'rel_height':2,'extension':2,'rel_side':2})
 
-    latest_year = int(df["game_year"].max())
-    df_latest   = df[df["game_year"] == latest_year]
+    # 인덱스 재정렬
+    grouped_df = grouped_df.reindex([2025, 2024, 2023], level='game_year')
+    grouped_df = grouped_df.reindex(['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider',  'Sweeper', 'Curveball','Changeup', 'Split-Finger'], level='pitch_name')
 
-    pitch_counts = (
-        df_latest.groupby("pitch_name")
-        .size()
-        .reset_index(name="count")
-        .sort_values("count", ascending=False)
-    )
-    pitch_counts["pct"] = (
-        pitch_counts["count"] / pitch_counts["count"].sum() * 100
-    ).round(1)
+    grouped_df = grouped_df.reset_index()
+    grouped_df = grouped_df.rename(columns={'game_year':'연도','pitch_name':'구종','pitname':'투구수','rel_speed(km)':'평균구속', 'release_spin_rate':'평균회전수','ver_break':'수직Mov','hor_break':'수평Mov',
+                                            'rel_height':'릴리스 높이','rel_side':'릴리스 좌우', 'extension': '익스텐션'})
+    
+    grouped_df = grouped_df.reset_index(drop=True)
 
-    colors = [COLOR_MAP.get(p, "gray") for p in pitch_counts["pitch_name"]]
-
-    fig = go.Figure(go.Bar(
-        x=pitch_counts["pitch_name"],
-        y=pitch_counts["pct"],
-        marker_color=colors,
-        text=pitch_counts["pct"].astype(str) + "%",
-        textposition="outside",
-    ))
-    fig.update_layout(
-        title=f"구종 비율 ({latest_year})",
-        yaxis_title="%",
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        height=400,
-        margin=dict(l=10, r=10, t=40, b=10),
-    )
-    return fig
+    return grouped_df
 
 
-# ════════════════════════════════════════════════════════════
-# 로케이션 차트
-# ════════════════════════════════════════════════════════════
-def season_location_fig(dataframe, stand="R"):
-    df = dataframe.copy()
-    if df.empty:
-        return go.Figure()
-
-    if "stand" in df.columns:
-        df = df[df["stand"] == stand]
-
-    latest_year = int(df["game_year"].max())
-    df_latest   = df[df["game_year"] == latest_year]
-
-    fig = px.scatter(
-        df_latest,
-        x="plate_x", y="plate_z",
-        color="pitch_name",
-        category_orders={"pitch_name": PITCH_ORDER},
-        color_discrete_map=COLOR_MAP,
-        hover_data=["pitname", "pitch_name", "game_date", "batname",
-                    "events", "description"],
-        template="plotly_white",
-    )
-    # 스트라이크 존
-    fig.add_shape(type="rect",
-                  x0=-0.2794, y0=0.4572, x1=0.2794, y1=1.0668,
-                  line=dict(color="black", width=2))
-    fig.update_traces(marker=dict(size=8, opacity=0.7))
-    fig.update_layout(
-        title=f"Location ({stand}HB) · {latest_year}",
-        height=500,
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=40, b=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.01,
-                    xanchor="left", x=0),
-    )
-    return fig
-
-
-# ════════════════════════════════════════════════════════════
-# 스윙 맵
-# ════════════════════════════════════════════════════════════
-def _swing_map_base(df, title="Swing Map"):
-    fig = px.density_heatmap(
-        df, x="plate_x", y="plate_z",
-        nbinsx=20, nbinsy=20,
-        color_continuous_scale="RdYlGn_r",
-        template="plotly_white",
-    )
-    fig.add_shape(type="rect",
-                  x0=-0.2794, y0=0.4572, x1=0.2794, y1=1.0668,
-                  line=dict(color="black", width=2))
-    fig.update_layout(
-        title=title,
-        height=450,
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=40, b=10),
-    )
-    return fig
-
-
-def create_pitcher_swing_map(dataframe):
-    return _swing_map_base(dataframe, "Swing Map (전체)")
-
-
-def create_pitcher_swing_map_stand(dataframe, stand="R"):
-    df = dataframe[dataframe["stand"] == stand] if "stand" in dataframe.columns else dataframe
-    return _swing_map_base(df, f"Swing Map ({stand}HB)")
-
-
-# ════════════════════════════════════════════════════════════
-# 투구별 맵
-# ════════════════════════════════════════════════════════════
-def pitch_by_pitch_map(dataframe):
-    df = dataframe.copy()
-    if df.empty:
-        return go.Figure()
-
-    fig = px.scatter(
-        df,
-        x="plate_x", y="plate_z",
-        color="pitch_name",
-        symbol="description",
-        category_orders={"pitch_name": PITCH_ORDER},
-        color_discrete_map=COLOR_MAP,
-        hover_data=["pitname", "pitch_name", "game_date",
-                    "batname", "events", "description"],
-        template="plotly_white",
-    )
-    fig.add_shape(type="rect",
-                  x0=-0.2794, y0=0.4572, x1=0.2794, y1=1.0668,
-                  line=dict(color="black", width=2))
-    fig.update_traces(marker=dict(size=9, opacity=0.75))
-    fig.update_layout(
-        height=500,
-        plot_bgcolor="white",
-        paper_bgcolor="white",
-        margin=dict(l=10, r=10, t=30, b=10),
-        legend=dict(orientation="h", yanchor="bottom", y=1.01,
-                    xanchor="left", x=0, font=dict(size=9)),
-    )
-    return fig
