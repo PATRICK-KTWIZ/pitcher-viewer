@@ -306,37 +306,36 @@ def show_main_page():
 
         # 1) 리그 먼저 선택
         option = st.sidebar.selectbox('리그 선택', ("-", "KBO(1군)", "KBO(2군)", "AAA(마이너)", "KBA(아마)"))
-
-        # 2) 리그 선택 시 데이터 로드 → 팀/선수 목록 생성
+       
+        # 리그 "-" 선택 시 로드 안 함
         if option != "-":
-            league_df = load_league_data(option)
-
-            if league_df is not None and not league_df.empty:
-                # 팀 목록
+            try:
+                league_df = load_league_data(option)
+            except Exception as e:
+                st.sidebar.error(f"데이터 로드 실패: {e}")
+                league_df = pd.DataFrame()
+        
+            if not league_df.empty:
                 latest_year = league_df['game_year'].max()
                 teams_list = sorted(
                     league_df[league_df['game_year'] == latest_year]['pitcherteam']
                     .dropna().unique().tolist()
                 )
                 select_team = st.sidebar.selectbox('팀명 선택', teams_list)
-
-                # 선수 목록 (선택된 팀 기준)
+        
                 team_df = league_df[
                     (league_df['game_year'] == latest_year) &
                     (league_df['pitcherteam'] == select_team)
                 ]
                 player_list = sorted(team_df['pitname'].dropna().unique().tolist())
                 select_player = st.sidebar.selectbox('선수 선택', player_list)
-
             else:
-                st.sidebar.warning("데이터를 불러올 수 없습니다.")
                 select_team = None
                 select_player = None
-                league_df = pd.DataFrame()
         else:
+            league_df = pd.DataFrame()
             select_team = None
             select_player = None
-            league_df = pd.DataFrame()
             st.sidebar.info("리그를 선택해 주세요.")
 
         # ✅ ── 변경 끝 ────────────────────────────────────────
@@ -350,6 +349,7 @@ def show_main_page():
         with col1:
             if st.button('선수추가', key="add_player_btn"):
                 if select_player and option != "-":
+                    # ✅ ID 없이 pitname 기준으로만 저장
                     st.session_state.selected_players.append({
                         'Team': select_team,
                         'Player Name': select_player,
@@ -368,16 +368,21 @@ def show_main_page():
                 st.write(f"Team: {player_info['Team']}, Player Name: {player_info['Player Name']}, League: {player_info['League']}")
 
         if st.sidebar.button('실행'):
-            
             concatenated_df = pd.DataFrame()
-
+        
             for player_info in st.session_state.selected_players:
-                # ✅ 기존 dataframe(league, id, password) → load_league_data + get_player_df
-                p_league_df = load_league_data(player_info['League'])
-                player_df   = get_player_df(p_league_df, player_info['Player Name'])
-                concatenated_df = pd.concat([concatenated_df, player_df])
-            
-            # ✅ pitcher 키: 기존 pitcher(숫자 ID) → pitname(선수명) 기준으로 groupby
+                try:
+                    p_league_df = load_league_data(player_info['League'])
+                    player_df   = get_player_df(p_league_df, player_info['Player Name'])
+                    concatenated_df = pd.concat([concatenated_df, player_df])
+                except Exception as e:
+                    st.error(f"[{player_info['Player Name']}] 데이터 로드 실패: {e}")
+        
+            if concatenated_df.empty:
+                st.warning("데이터가 없습니다. 선수를 추가하고 실행해 주세요.")
+                st.stop()
+        
+            # ✅ pitname 기준 groupby
             pitcher_dataframes = {}
             for pitcher_name, group in concatenated_df.groupby('pitname'):
                 pitcher_dataframes[pitcher_name] = group.copy()
