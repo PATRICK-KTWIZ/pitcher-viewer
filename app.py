@@ -221,8 +221,8 @@ def show_login_page():
         st.markdown('<div class="subheader-text">투수 분석페이지에 오신것을 환영합니다.</div>', unsafe_allow_html=True)
         st.markdown('<hr style="margin:0;">', unsafe_allow_html=True)
 
-        userName = st.text_input("", placeholder="아이디",    label_visibility="collapsed")
-        password = st.text_input("", placeholder="비밀번호", type="password", label_visibility="collapsed")
+        userName = st.text_input("-", placeholder="아이디",    label_visibility="collapsed")
+        password = st.text_input("-", placeholder="비밀번호", type="password", label_visibility="collapsed")
         st.session_state["password"] = password
 
         st.button("로그인", on_click=LoggedIn_Clicked, args=(userName, password))
