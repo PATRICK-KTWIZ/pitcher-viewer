@@ -148,8 +148,8 @@ def show_login_page():
         st.markdown('<hr style="margin: 0px 0;">', unsafe_allow_html=True)
 
         with st.container():
-            userName = st.text_input("", placeholder="아이디", label_visibility="collapsed")
-            password = st.text_input("", placeholder="비밀번호", type="password", label_visibility="collapsed")
+            userName = st.text_input("아이디", placeholder="아이디", label_visibility="collapsed")
+            password = st.text_input("비밀번호", placeholder="비밀번호", type="password", label_visibility="collapsed")
             st.session_state['password'] = password
             st.button("로그인", on_click=LoggedIn_Clicked, args=(userName, password))
 
