@@ -214,16 +214,26 @@ def show_main_page():
     
         if select_league_label == "-":
             st.info("👈 사이드바에서 리그를 먼저 선택해 주세요.")
-            return
+            st.stop()
+
+        # 리그 선택 이후 로직 (여기서부터는 selected_label이 "-"이 아님이 보장됨)
+        league_key = LEAGUE_LABELS[select_league_label]        
     
         # 리그가 바뀌면 이전 선택값들을 모두 초기화
-        if st.session_state.get("current_league") != select_league_label:
-            st.session_state["current_league"] = select_league_label
-            st.session_state["filter_team"] = "-"
+        if "current_league" not in st.session_state or st.session_state["current_league"] != league_key:
+            st.session_state["current_league"] = league_key
+            st.session_state["filter_team"] = "-" 
             st.session_state["filter_pitcher"] = "-"
-            st.rerun() # 초기화 후 즉시 재실행
+            st.rerun()
+
+        # 데이터 로딩 (dataframe.py에서 수정된 캐시 함수 호출)
+        league_df = load_league_data(league_key)
+
+        if league_df.empty:
+            st.warning(f"{selected_label} 리그의 데이터를 불러올 수 없습니다.")
+            return
     
-        # 2. 캐시된 데이터 호출
+        # 캐시된 데이터 호출
         league_key = LEAGUE_LABELS[select_league_label]
         league_df = _load_cached_data(league_key)
 
