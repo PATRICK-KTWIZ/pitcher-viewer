@@ -90,8 +90,8 @@ loginSection  = st.container()
 logOutSection = st.container()
 
 # ── 캐시된 데이터 로드 (루프 밖에 정의) ★ BUG FIX ─────────────────────────
-@st.cache_data(show_spinner="📦 데이터 로드 중...")
-def _load_cached(league_key: str) -> pd.DataFrame:
+@st.cache_data(show_spinner="📦 데이터를 불러오는 중입니다...")
+def _load_cached_data(league_key: str):
     return load_league_data(league_key)
 
 # ── 유틸 함수 ─────────────────────────────────────────────────────────────────
@@ -208,29 +208,24 @@ def show_main_page():
         )
 
         # ── ① 리그 선택 & 데이터 로드 ────────────────────────────────────────
-        league_display_list = ["-"] + list(LEAGUE_LABELS.keys())
-        select_league_label = st.sidebar.selectbox(
-            "리그 선택",
-            league_display_list,
-            key="league_select"
-        )
 
-        # 리그가 선택되지 않은 경우 안내 후 종료
+        league_display_list = ["-"] + list(LEAGUE_LABELS.keys())
+        select_league_label = st.sidebar.selectbox("리그 선택", league_display_list, key="league_select")
+    
         if select_league_label == "-":
-            st.sidebar.info("리그를 선택하면 팀/선수 목록이 표시됩니다.")
             st.info("👈 사이드바에서 리그를 먼저 선택해 주세요.")
             return
-
-        # 리그 변경 시 선수 목록 초기화
-        if st.session_state.get("_prev_league") != select_league_label:
-            st.session_state["_prev_league"]     = select_league_label
-            st.session_state["selected_players"] = []
-            st.session_state["filter_team"]      = "-"
-            st.session_state["filter_pitcher"]   = "-"
-
-        # 데이터 로드 (캐시 활용) ★ BUG FIX: 루프 밖 전역 함수 사용
+    
+        # 리그가 바뀌면 이전 선택값들을 모두 초기화
+        if st.session_state.get("current_league") != select_league_label:
+            st.session_state["current_league"] = select_league_label
+            st.session_state["filter_team"] = "-"
+            st.session_state["filter_pitcher"] = "-"
+            st.rerun() # 초기화 후 즉시 재실행
+    
+        # 2. 캐시된 데이터 호출
         league_key = LEAGUE_LABELS[select_league_label]
-        league_df  = _load_cached(league_key)
+        league_df = _load_cached_data(league_key)
 
         if league_df is None or league_df.empty:
             st.error(f"{select_league_label} 데이터를 불러오지 못했습니다.")
