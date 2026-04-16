@@ -1,356 +1,1014 @@
 import streamlit as st
 import pandas as pd
-import traceback as tb
-from definition import (
-    stats, season_stand, season_pitchname,
-    stats_viewer_pitchname, swing_viewer_pitchname,
-    season_stand_pitchname, swing_viewer_stand_pitchname,
-    stats_viewer_stand_pitchname, stats_viewer, swing_viewer,
-    stats_viewer_stand, swing_viewer_stand, movement_dataframe,
-    LEAGUE_OPTIONS,
-)
-from dataframe import load_league_data, get_team_list, get_pitcher_list, get_player_df
-from map import (
-    season_movement_chart, season_pitchtrack_chart, season_pitched_fig,
-    season_location_fig, create_pitcher_swing_map,
-    create_pitcher_swing_map_stand, pitch_by_pitch_map,
-)
+from definition import select_league, stats, season_stand, stats_viewer_pitchname, swing_viewer_pitchname, season_stand_pitchname, swing_viewer_stand_pitchname, stats_viewer_stand_pitchname 
+from definition import season_pitchname, stats_viewer, swing_viewer, stats_viewer_stand, swing_viewer_stand, movement_dataframe
+from map import season_movement_chart, season_pitchtrack_chart, season_pitched_fig, season_location_fig, create_pitcher_swing_map, create_pitcher_swing_map_stand, pitch_by_pitch_map
+import time
+# ✅ dataframe → load_league_data, get_player_df 로 교체
+from dataframe import load_league_data, get_player_df
+from PIL import Image
 from user import login
+import plotly.express as px
 import plotly.graph_objects as go
+from streamlit.components.v1 import html
+import plotly.io as pio
 
-# ════════════════════════════════════════════════════════════
-# 페이지 설정
-# ════════════════════════════════════════════════════════════
-st.set_page_config(layout="wide", page_title="KT WIZ PITCHING ANALYTICS")
-
+# Set a unique token for the cookie
 COOKIE_TOKEN = "my_unique_cookie_token"
 
-# ════════════════════════════════════════════════════════════
-# 세션 상태 초기화 ── 앱 최초 실행 시 1회만
-# ════════════════════════════════════════════════════════════
-if "loggedIn" not in st.session_state:
-    st.session_state["loggedIn"] = False
-if "current_menu" not in st.session_state:
-    st.session_state["current_menu"] = "season_stats"
+# 페이지 설정
+st.set_page_config(
+    layout="wide",
+    page_title="KT WIZ PITCHING ANALYTICS"
+)
 
-# ════════════════════════════════════════════════════════════
-# CSS
-# ════════════════════════════════════════════════════════════
+if 'loggedIn' not in st.session_state:
+    st.session_state.loggedIn = False
+
 st.markdown("""
 <style>
-@media (max-width: 1024px) {
-    .header-text    { font-size: 24px !important; }
-    .subheader-text { font-size: 15px !important; }
-    .block-container { padding: 0.5rem 1rem !important; }
-}
-@media (max-width: 767px) {
-    .header-text    { font-size: 18px !important; }
-    .subheader-text { font-size: 13px !important; }
-    .block-container { padding: 0.3rem 0.5rem !important; }
-    .js-plotly-plot  { width: 100% !important; }
-}
-.stApp {
-    background: linear-gradient(135deg, #e70012 50%, #f0f0f0 50%);
-    background-attachment: fixed;
-}
-[data-testid="stSidebar"] {
-    background-color: #e70012 !important;
-    color: #ffffff !important;
-}
-[data-testid="stSidebar"] .stButton > button {
-    background-color: #cccccc !important; color: black !important;
-    width: 100%; border-radius: 7px; padding: 0.5rem 1rem;
-    height: 2rem; font-size: 16px; font-weight: 500;
-}
-[data-testid="stSidebar"] label,
-[data-testid="stSidebar"] .stSelectbox > div > label { color: #ababab !important; }
-[data-testid="stSidebar"] .stSelectbox > div > div > div { color: black !important; }
-.header-container { padding: 1rem; margin: 0; width: 100%; margin-top: -1rem; }
-.header-text { font-size: 32px; font-weight: bold; color: #333333; margin-bottom: 0; }
-.subheader-text { color: #c0c0c0; font-size: 18px; margin-bottom: 10px; }
-.login-container {
-    max-width: 420px; margin: 20px auto; padding: 20px;
-    background-color: #f0f0f0; border-radius: 8px;
-}
-.logo-container { text-align: center; margin-bottom: 20px; }
-.stButton > button {
-    background-color: #333333; color: #c0c0c0;
-    width: 100%; padding: 10px; border: none;
-    border-radius: 3px; cursor: pointer;
-}
-.warning-text {
-    color: red; font-weight: bold; margin-bottom: 12px;
-    font-size: 16px; text-align: right;
-}
-.info-text { font-size: 15px; color: #666; }
+    .stApp {
+        background: linear-gradient(135deg, #e70012 50%, #f0f0f0 50%);
+        background-attachment: fixed;
+        height: 95vh;
+        max-height: 1000px;
+        overflow: auto;
+    }
+    [data-testid="stSidebar"] {
+        background-color: #e70012 !important;
+        color: #ffffff !important;
+    }
+    [data-testid="stSidebar"] .stButton > button {
+        background-color: #cccccc !important;
+        color: black !important;
+        width: 100%;
+        border-radius: 7px;
+        padding: 0.5rem 1rem;
+        height: 2rem;
+        font-size: 16px;
+        margin-bottom: 0px;
+        font-weight: 500;
+    }
+    [data-testid="stSidebar"] .css-81oif8,
+    [data-testid="stSidebar"] .css-1inwz65,
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stSelectbox > div > label {
+        color: #ababab !important;
+    }
+    [data-testid="stSidebar"] .stSelectbox > div > div > div {
+        color: black !important;
+    }
+    [data-testid="stSidebar"] button:has([data-testid="stMarkdownContainer"]) {
+        color: black !important; 
+        font-weight: bold !important;
+        font-size: 15px;
+    }
+    .stSelectbox option {
+        color: black;
+    }
+    .header-container {
+        padding: 1rem;
+        margin: 0;
+        width: 100vw;
+        position: relative;
+        left: 50%;
+        right: 50%;
+        margin-left: -47vw;
+        margin-right: -50vw;
+        margin-top: -2vw;
+    }
+    .login-container {
+        max-width: 100px;
+        margin: 20px auto;
+        padding: 20px;
+        background-color: #f0f0f0;
+    }
+    .logo-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .stTextInput > div > div > input {
+        border: 0px solid #ddd;
+        padding: 10px;
+        border-radius: 0px;
+        margin-bottom: 0px;
+    }
+    .stButton > button {
+        background-color: #333333;
+        color: #c0c0c0;
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+    }
+    .footer {
+        text-align: center;
+        position: fixed;
+        bottom: 60px;
+        width: 100%;
+        color: #333;
+        font-size: 15px;
+    }
+    .login-background {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: #f0f0f0;
+        background-size: cover;
+        z-index: -1;
+    }
+    .header-text {
+        font-size: 35px;
+        font-weight: bold;
+        color: #333333;
+        margin-bottom: 0px;
+    }
+    .subheader-text {
+        color: #c0c0c0;
+        font-size: 18px;
+        margin-bottom: 10px;
+    }
+    .info-text {
+        font-size: 15px;
+        color: #666;
+    }
+    .warning-text {
+        color: red;
+        font-weight: bold;
+        margin-bottom: 12px;
+        font-size: 16px;
+        text-align: right;
+    }
 </style>
 """, unsafe_allow_html=True)
 
-# ════════════════════════════════════════════════════════════
-# 헬퍼 함수
-# ════════════════════════════════════════════════════════════
-def is_logged_in() -> bool:
-    return st.session_state.get("loggedIn", False) is True
 
-def do_login(userName: str, password: str):
-    """폼 제출 시 즉시 호출 — on_click 콜백 방식 대신 폼 방식 사용"""
-    if not userName or not password:
-        st.session_state["login_error"] = "아이디와 비밀번호를 입력해 주세요."
-        return
+headerSection = st.container()
+mainSection = st.container()
+loginSection = st.container()
+logOutSection = st.container()
+
+def get_user_id():
+    return st.session_state.get(COOKIE_TOKEN)
+
+def set_user_id(user_id):
+    st.session_state[COOKIE_TOKEN] = user_id
+
+def is_user_logged_in():
+    return st.session_state.get('loggedIn', False)
+
+def LoggedOut_Clicked():
+    st.session_state['loggedIn'] = False
+
+def show_logout_page():
+    loginSection.empty()
+    with logOutSection:
+        st.sidebar.button("Log Out", key="logout", on_click=LoggedOut_Clicked)
+
+def LoggedIn_Clicked(userName, password):
     if login(userName, password):
-        st.session_state["loggedIn"] = True
-        st.session_state["login_error"] = ""
+        set_user_id(userName)
+        st.session_state['loggedIn'] = True
+        st.session_state['password'] = password
     else:
-        st.session_state["loggedIn"] = False
-        st.session_state["login_error"] = "유효하지 않은 ID 또는 패스워드 입니다."
+        st.session_state['loggedIn'] = False
+        st.error("유효하지 않은 ID 또는 패스워드 입니다.")
 
-def do_logout():
-    st.session_state["loggedIn"] = False
-    st.session_state["current_menu"] = "season_stats"
+def reset_selections():
+    st.session_state.selected_players = []
 
-# ════════════════════════════════════════════════════════════
-# 로그인 페이지
-# ════════════════════════════════════════════════════════════
 def show_login_page():
     st.markdown("""
-    <div class="header-container">
-        <h1 class="header-text">
-            <span style='color:#c0c0c0;'>KT WIZ</span>
-            <span style='color:#333333;'> PITCHING ANALYTICS</span>
-        </h1>
-    </div>""", unsafe_allow_html=True)
+    <style>
+        [data-testid="stVerticalBlock"] > div:first-child {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+        .header-container h1 {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+            line-height: 1.5;
+        }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+                <div class="header-container">
+                    <h1 class="header-text">
+                        <span style='color: #c0c0c0;'>KT WIZ</span> 
+                        <span style='color: #333333;'>PITCHING ANALYTICS</span> 
+                        <span style='color: #c0c0c0;'>PAGE[Multiple Choice]</span>
+                    </h1>
+                </div>
+                """, unsafe_allow_html=True)
 
-    _, mid1, mid2, _ = st.columns([0.5, 4, 5, 0.5])
+    left_col, middle1_col, middle2_col, right_col = st.columns([0.7, 4, 5, 0.7])
 
-    with mid1:
-        st.markdown('<div class="logo-container" style="padding-top:80px;">', unsafe_allow_html=True)
-        st.image("ktwiz_emblem.png", width=260)
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with mid2:
+    with middle1_col:
+        st.markdown("""
+        <div class="logo-container" style="padding-top: 100px;">
+        """, unsafe_allow_html=True)
+        st.image("ktwiz_emblem.png", width=280)
+        st.markdown('</div>', unsafe_allow_html=True)
+    
+    with middle2_col:
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         st.markdown('<div class="warning-text">※허가된 사용자 외 사용을 금함</div>', unsafe_allow_html=True)
         st.markdown('<div class="header-text">케이티 위즈</div>', unsafe_allow_html=True)
         st.markdown('<div class="subheader-text">투수 분석페이지에 오신것을 환영합니다.</div>', unsafe_allow_html=True)
-        st.markdown('<hr style="margin:0;">', unsafe_allow_html=True)
+        st.markdown('<hr style="margin: 0px 0;">', unsafe_allow_html=True)
 
-        # ✅ st.form 사용 → 제출 시 즉시 세션 반영 후 rerun
-        with st.form(key="login_form", clear_on_submit=False):
-            userName = st.text_input("아이디",   placeholder="아이디",   label_visibility="collapsed")
+        form_col = st.container()
+        with form_col:
+            # ✅ label에 빈 문자열 대신 실제 텍스트 + label_visibility="collapsed"
+            userName = st.text_input("아이디", placeholder="아이디", label_visibility="collapsed")
             password = st.text_input("비밀번호", placeholder="비밀번호", type="password", label_visibility="collapsed")
-            submitted = st.form_submit_button("로그인")
+            st.session_state['password'] = password
 
-        if submitted:
-            do_login(userName, password)
-            st.rerun()   # ← 로그인 성공/실패 즉시 화면 갱신
+            st.markdown("""
+            <style>
+                [data-testid="element-container"] [data-testid="stButton"][key="login_btn"] button {
+                    background-color: #333333 !important;
+                    color: #c0c0c0 !important;
+                }
+            </style>
+            """, unsafe_allow_html=True)
+            
+            login_button = st.button("로그인", on_click=LoggedIn_Clicked, args=(userName, password))
+        
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        if st.session_state.get("login_error"):
-            st.error(st.session_state["login_error"])
+        checkbox_col1, checkbox_col2 = st.columns([1, 3])
+        with checkbox_col1:
+            remember_id = st.checkbox("아이디 저장", key="remember_id")
+        with checkbox_col2:
+            st.markdown('<div class="info-text-custom">아이디와 비밀번호를 입력하여 로그인 후 사용해 주세요.</div>', unsafe_allow_html=True)
+    
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
-        st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("""
+    <div class="footer">
+        Copyright © 2025 kt wiz baseball club. All rights reserved.
+    </div>
+    """, unsafe_allow_html=True)
 
-        c1, c2 = st.columns([1, 3])
-        with c1:
-            st.checkbox("아이디 저장", key="remember_id")
-        with c2:
-            st.markdown(
-                '<div class="info-text">아이디와 비밀번호를 입력하여 로그인 후 사용해 주세요.</div>',
-                unsafe_allow_html=True,
-            )
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ════════════════════════════════════════════════════════════
-# 메인 페이지
-# ════════════════════════════════════════════════════════════
+
 def show_main_page():
-
-    # ── 로그아웃 ─────────────────────────────────────────────
-    if st.sidebar.button("Log Out", key="logout"):
-        do_logout()
-        st.rerun()
-
-    st.sidebar.markdown("### ⚙️ 필터")
-    st.sidebar.markdown("---")
-
-    # ── STEP 1 : 리그 선택 ──────────────────────────────────
-    selected_league = st.sidebar.selectbox(
-        "🏆 리그 선택", options=LEAGUE_OPTIONS, key="selected_league"
-    )
-
-    # ── STEP 2 : 데이터 로드 ────────────────────────────────
-    err_area = st.empty()   # 메인 영역 에러 표시용
-
-    league_df = None
-    load_status = st.sidebar.empty()
-    load_status.info(f"⏳ {selected_league} 로딩 중...")
-    try:
-        league_df = load_league_data(selected_league)
-        load_status.empty()
-    except Exception as e:
-        load_status.empty()
-        err_area.error(
-            f"### ❌ 데이터 로드 실패\n\n"
-            f"**`{type(e).__name__}`**: {e}\n\n"
-            f"```\n{tb.format_exc()}\n```"
-        )
+    
+    if not is_user_logged_in():
+        show_login_page()
         return
 
-    if league_df is None or league_df.empty:
-        err_area.warning(f"⚠️ [{selected_league}] 데이터가 비어 있습니다.")
-        return
+    st.markdown('<div class="main-page">', unsafe_allow_html=True)
 
-    # ── STEP 3 : 팀 선택 ────────────────────────────────────
-    try:
-        team_list = get_team_list(league_df)
-    except Exception as e:
-        err_area.error(
-            f"### ❌ 팀 목록 생성 실패\n\n"
-            f"**`{type(e).__name__}`**: {e}\n\n"
-            f"```\n{tb.format_exc()}\n```"
-        )
-        return
+    st.markdown("""
+    <style>
+        ::-webkit-scrollbar { height: 10px; background-color: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background-color: #888; border-radius: 5px; }
+        ::-webkit-scrollbar-thumb:hover { background-color: #555; }
+    </style>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("""
+    <style>
+        .stApp {
+        background: #ffffff;
+        height: 100vh;
+        overflow: auto;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-    if not team_list:
-        err_area.warning("⚠️ 팀 정보 없음 — `pitcherteam` 컬럼을 확인하세요.")
-        return
+    with mainSection:
+        
+        st.title("KT WIZ :red[PITCHING ANALYTICS] PAGE[Multiple Choice]")
 
-    default_idx = next(
-        (i for i, t in enumerate(team_list) if "KT" in str(t).upper()), 0
-    )
-    selected_team = st.sidebar.selectbox(
-        "🏟️ 팀 선택", options=team_list, index=default_idx, key="selected_team"
-    )
+        with st.sidebar:
+            st.markdown("<br>", unsafe_allow_html=True)
+            col1, col2, col3 = st.columns([1, 6, 1])
+            with col2:
+                st.image("ktwiz_emblem.png", width=300)
+            st.markdown('<div style="height: 30px;"></div>', unsafe_allow_html=True)
 
-    # ── STEP 4 : 선수 선택 ──────────────────────────────────
-    try:
-        pitcher_options = get_pitcher_list(league_df, selected_team)
-    except Exception as e:
-        err_area.error(
-            f"### ❌ 선수 목록 생성 실패\n\n"
-            f"**`{type(e).__name__}`**: {e}\n\n"
-            f"```\n{tb.format_exc()}\n```"
-        )
-        return
+        # ✅ ── 변경 시작 ──────────────────────────────────────
+        # 기존: player_id_info_2025.csv 로드 + find_id()
+        # 변경: 리그 선택 → load_league_data() → 팀/선수 목록 동적 생성
 
-    if not pitcher_options:
-        err_area.warning(f"⚠️ [{selected_team}] 투수 데이터 없음")
-        return
+        sidebar_text = '<p style="text-align: center; font-family:sans-serif; color:white; font-size: 22px;font-weight:bold">[투수분석 페이지]</p>'
+        st.sidebar.markdown(sidebar_text, unsafe_allow_html=True)
 
-    pitcher_labels = [p["label"] for p in pitcher_options]
-    pitcher_values = [p["value"] for p in pitcher_options]
+        sidebar_text = '<p style="text-align: center; font-family:sans-serif; color: #c0c0c0; font-size: 16px;">본 웹페이지는 kt wiz 전략데이터팀이<br> 개발 및 발행하였으며 허용되는 사용자 외 <br>배포 및 사용을 엄금함</p>'
+        st.sidebar.markdown(sidebar_text, unsafe_allow_html=True)
 
-    selected_label = st.sidebar.selectbox(
-        "🧢 투수 선택", options=pitcher_labels, key="selected_pitcher_label"
-    )
-    selected_pitcher = pitcher_values[pitcher_labels.index(selected_label)]
+        # 1) 리그 먼저 선택
+        option = st.sidebar.selectbox('리그 선택', ("-", "KBO(1군)", "KBO(2군)", "AAA(마이너)", "KBA(아마)"))
 
-    st.sidebar.markdown("---")
+        # 2) 리그 선택 시 데이터 로드 → 팀/선수 목록 생성
+        if option != "-":
+            league_df = load_league_data(option)
 
-    # ── STEP 5 : 메뉴 버튼 ──────────────────────────────────
-    menu_items = [
-        ("📊 시즌 스탯",     "season_stats"),
-        ("🎯 무브먼트 차트", "movement"),
-        ("📍 로케이션",      "location"),
-        ("🔄 구종 비율",     "pitch_ratio"),
-        ("📈 스윙 분석",     "swing"),
-        ("🎥 투구 트래킹",   "pitch_track"),
-    ]
-    for lbl, key in menu_items:
-        if st.sidebar.button(lbl, key=f"menu_{key}"):
-            st.session_state["current_menu"] = key
-            st.rerun()
+            if league_df is not None and not league_df.empty:
+                # 팀 목록
+                latest_year = league_df['game_year'].max()
+                teams_list = sorted(
+                    league_df[league_df['game_year'] == latest_year]['pitcherteam']
+                    .dropna().unique().tolist()
+                )
+                select_team = st.sidebar.selectbox('팀명 선택', teams_list)
 
-    # ── STEP 6 : 선수 데이터 필터링 ─────────────────────────
-    try:
-        player_df = get_player_df(league_df, selected_pitcher)
-    except Exception as e:
-        err_area.error(
-            f"### ❌ 선수 데이터 필터링 실패\n\n"
-            f"**`{type(e).__name__}`**: {e}\n\n"
-            f"```\n{tb.format_exc()}\n```"
-        )
-        return
+                # 선수 목록 (선택된 팀 기준)
+                team_df = league_df[
+                    (league_df['game_year'] == latest_year) &
+                    (league_df['pitcherteam'] == select_team)
+                ]
+                player_list = sorted(team_df['pitname'].dropna().unique().tolist())
+                select_player = st.sidebar.selectbox('선수 선택', player_list)
 
-    if player_df is None or player_df.empty:
-        err_area.warning(f"⚠️ '{selected_pitcher}' 데이터 없음")
-        return
+            else:
+                st.sidebar.warning("데이터를 불러올 수 없습니다.")
+                select_team = None
+                select_player = None
+                league_df = pd.DataFrame()
+        else:
+            select_team = None
+            select_player = None
+            league_df = pd.DataFrame()
+            st.sidebar.info("리그를 선택해 주세요.")
 
-    err_area.empty()
+        # ✅ ── 변경 끝 ────────────────────────────────────────
 
-    # ── 헤더 ────────────────────────────────────────────────
-    st.markdown(f"""
-    <div class="header-container">
-        <h1 class="header-text">
-            <span style='color:#c0c0c0;'>KT WIZ</span>
-            <span style='color:#333333;'> PITCHING ANALYTICS</span>
-            <span style='color:#c0c0c0; font-size:18px;'> · {selected_pitcher}</span>
-        </h1>
-        <div class="subheader-text">{selected_league} · {selected_team}</div>
-    </div>""", unsafe_allow_html=True)
+        # 선수 추가 / 새로고침 버튼
+        if 'selected_players' not in st.session_state:
+            st.session_state.selected_players = []
 
-    menu = st.session_state["current_menu"]
+        col1, col2 = st.sidebar.columns(2)
+        
+        with col1:
+            if st.button('선수추가', key="add_player_btn"):
+                if select_player and option != "-":
+                    st.session_state.selected_players.append({
+                        'Team': select_team,
+                        'Player Name': select_player,
+                        'League': option,
+                    })
+     
+        with col2:
+            if st.button('새로고침', key="refresh_btn"):
+                st.session_state.selected_players = []
 
-    # ════════════════════════════════════════════════════════
-    # 메뉴별 콘텐츠
-    # ════════════════════════════════════════════════════════
-    if menu == "season_stats":
-        st.subheader("📊 시즌 스탯")
-        c1, c2 = st.columns(2)
-        with c1:
-            st.markdown("**전체**")
-            try:   st.dataframe(stats(player_df), use_container_width=True)
-            except Exception: st.error(tb.format_exc())
-        with c2:
-            st.markdown("**좌/우 타자별**")
-            try:   st.dataframe(season_stand(player_df), use_container_width=True)
-            except Exception: st.error(tb.format_exc())
-        st.markdown("**구종별**")
-        try:   st.dataframe(season_pitchname(player_df), use_container_width=True)
-        except Exception: st.error(tb.format_exc())
+        selected_player_df = pd.DataFrame()
 
-    elif menu == "movement":
-        st.subheader("🎯 무브먼트 차트")
-        try:
-            fig = season_movement_chart(movement_dataframe(player_df))
-            st.plotly_chart(fig, use_container_width=True)
-        except Exception: st.error(tb.format_exc())
+        if st.session_state.selected_players:
+            st.subheader('Selected Players:')
+            for player_info in st.session_state.selected_players:
+                st.write(f"Team: {player_info['Team']}, Player Name: {player_info['Player Name']}, League: {player_info['League']}")
 
-    elif menu == "location":
-        st.subheader("📍 로케이션")
-        t1, t2 = st.tabs(["vs 우타 (R)", "vs 좌타 (L)"])
-        with t1:
-            try:   st.plotly_chart(season_location_fig(player_df, "R"), use_container_width=True)
-            except Exception: st.error(tb.format_exc())
-        with t2:
-            try:   st.plotly_chart(season_location_fig(player_df, "L"), use_container_width=True)
-            except Exception: st.error(tb.format_exc())
+        if st.sidebar.button('실행'):
+            
+            concatenated_df = pd.DataFrame()
 
-    elif menu == "pitch_ratio":
-        st.subheader("🔄 구종 비율")
-        try:   st.plotly_chart(season_pitched_fig(player_df), use_container_width=True)
-        except Exception: st.error(tb.format_exc())
+            for player_info in st.session_state.selected_players:
+                # ✅ 기존 dataframe(league, id, password) → load_league_data + get_player_df
+                p_league_df = load_league_data(player_info['League'])
+                player_df   = get_player_df(p_league_df, player_info['Player Name'])
+                concatenated_df = pd.concat([concatenated_df, player_df])
+            
+            # ✅ pitcher 키: 기존 pitcher(숫자 ID) → pitname(선수명) 기준으로 groupby
+            pitcher_dataframes = {}
+            for pitcher_name, group in concatenated_df.groupby('pitname'):
+                pitcher_dataframes[pitcher_name] = group.copy()
 
-    elif menu == "swing":
-        st.subheader("📈 스윙 분석")
-        t1, t2, t3 = st.tabs(["전체", "vs 우타 (R)", "vs 좌타 (L)"])
-        with t1:
-            try:   st.plotly_chart(create_pitcher_swing_map(player_df), use_container_width=True)
-            except Exception: st.error(tb.format_exc())
-        with t2:
-            try:   st.plotly_chart(create_pitcher_swing_map_stand(player_df, "R"), use_container_width=True)
-            except Exception: st.error(tb.format_exc())
-        with t3:
-            try:   st.plotly_chart(create_pitcher_swing_map_stand(player_df, "L"), use_container_width=True)
-            except Exception: st.error(tb.format_exc())
+# -------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------
+            
+            st.title('[시즌별 :red[주요현황]]')
+            st.subheader(':gray[기록 & 투구]')
 
-    elif menu == "pitch_track":
-        st.subheader("🎥 투구 트래킹")
-        try:   st.plotly_chart(season_pitchtrack_chart(player_df), use_container_width=True)
-        except Exception: st.error(tb.format_exc())
+            season_stats_concat_df = pd.DataFrame()
 
-# ════════════════════════════════════════════════════════════
-# ✅ 진입점 — 세션 상태로만 분기 (함수 호출 중복 없음)
-# ════════════════════════════════════════════════════════════
-if is_logged_in():
-    show_main_page()
-else:
-    show_login_page()
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+
+                season_stats_df = stats(pitcher_raw_df)
+                stats_viewer_df = stats_viewer(season_stats_df)
+
+                # ✅ pitcher = pitname(문자열)이므로 직접 사용
+                pitcher_name = pitcher
+
+                stats_f_row_df = stats_viewer_df.iloc[:1]
+                game_year = stats_f_row_df.index.values[0]
+
+                stats_f_row_df['선수명'] = pitcher_name
+                stats_f_row_df.set_index('선수명', inplace=True)
+                stats_f_row_df.insert(0,'연도',game_year)
+                
+                season_stats_concat_df = pd.concat([season_stats_concat_df, stats_f_row_df])
+
+            pd.set_option('display.max_colwidth', 100)
+
+            s1 = dict(selector='th', props=[('text-align', 'center')])
+            s2 = dict(selector='td', props=[('text-align', 'center')])  
+            styled_df = season_stats_concat_df.style.set_table_styles([s1, s2])
+            st.dataframe(styled_df, width=1600)
+            
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                season_stats_df = stats(pitcher_raw_df)
+                stats_viewer_df = stats_viewer(season_stats_df)
+
+                stats_viewer_df = stats_viewer_df.reset_index()
+                stats_viewer_df = stats_viewer_df.astype({'game_year':'str'})
+                stats_viewer_df = stats_viewer_df.rename(columns={'game_year':'연도'})
+                stats_viewer_df = stats_viewer_df.set_index('연도')
+
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
+                    st.dataframe(stats_viewer_df, width=1500)
+
+#-------------------------------------------------------------------------------------------------------
+
+            st.subheader(':gray[투구 경향성]')
+
+            season_swing_concat_df = pd.DataFrame()
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                season_stats_df = stats(pitcher_raw_df)
+                swing_viewer_df = swing_viewer(season_stats_df)
+
+                swing_f_row_df = swing_viewer_df.iloc[:1]
+                game_year = swing_f_row_df.index.values[0]
+
+                swing_f_row_df['선수명'] = pitcher_name
+                swing_f_row_df.set_index('선수명', inplace=True)
+                swing_f_row_df.insert(0,'연도',game_year)
+                
+                season_swing_concat_df = pd.concat([season_swing_concat_df, swing_f_row_df])
+
+            st.dataframe(season_swing_concat_df, width=1600)
+            
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                season_stats_df = stats(pitcher_raw_df)
+                swing_viewer_df = swing_viewer(season_stats_df)
+
+                swing_viewer_df = swing_viewer_df.reset_index()
+                swing_viewer_df = swing_viewer_df.astype({'game_year':'str'})
+                swing_viewer_df = swing_viewer_df.rename(columns={'game_year':'연도'})
+                swing_viewer_df = swing_viewer_df.set_index('연도')
+
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
+                    st.dataframe(swing_viewer_df, width=1500)
+
+            with st.expander("LSA(Launch Speed Angle) 이란?"):
+                st.write("LSA(Launch Speed Angle)은 Baseball Savant의 타구표에서 활용되는 지표로 6단계로 타구의 질을 구분하고 있음 (*괄호의 %는 안타확률)")
+                st.write("LSA 1: Weak(10.4%) / LSA 2: Topped(22.3%) / LSA 3: Under(7.7%) / LSA 4: Flare & Burner(70.8%) / LSA 5: Solid Contact(46.3%) / LSA 6: Barrel(70.5%)")
+                st.markdown("""<style>[data-testid=stExpander] [data-testid=stImage]{text-align: left;display: block;margin-left: 10; margin-right: auto; width: 50%;}</style>""", unsafe_allow_html=True)
+                st.image("approach.jpg")
+
+            with st.expander("타격 어프로치 구분"):
+                st.write("타격 어프로치는 타자들의 타격성향을 나타내기 위해 작성된 내용으로 리그의 평균적인 존에 대한 스윙시도, 존 외부에 대한 스윙시도를 기준으로 4가지의 성향을 구분하고 있음")
+                st.markdown("""<style>[data-testid=stExpander] [data-testid=stImage]{text-align: left;display: block;margin-left: 10; margin-right: auto; width: 80%;}</style>""", unsafe_allow_html=True)
+                st.image("plate_discipline.png")
+
+            st.divider()
+
+# -------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[구종유형별] 현황]')
+            st.subheader(':gray[기록 & 투구]')
+
+            pkind_stats_concat_df = pd.DataFrame()
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                pkind_stats_df = season_pitchname(pitcher_raw_df)
+                pkind_stats_df = pkind_stats_df.set_index('game_year')
+                stats_viewer_df = stats_viewer_pitchname(pkind_stats_df)
+
+                stats_viewer_df = stats_viewer_df.reset_index()
+                stats_viewer_df = stats_viewer_df.astype({'game_year':'str'})
+                stats_viewer_df = stats_viewer_df.rename(columns={'game_year':'연도'})
+
+                stats_f_row_df = stats_viewer_df.iloc[:1]
+                game_year = stats_f_row_df.iloc[0]['연도']
+                stats_f_row_df = stats_viewer_df[stats_viewer_df['연도'] == game_year]
+
+                stats_f_row_df['선수명'] = pitcher_name
+                stats_f_row_df.set_index('선수명', inplace=True)
+                
+                pkind_stats_concat_df = pd.concat([pkind_stats_concat_df, stats_f_row_df])
+
+            st.dataframe(pkind_stats_concat_df, width=1600)
+            
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                pkind_stats_df = season_pitchname(pitcher_raw_df)
+                pkind_stats_df = pkind_stats_df.rename(columns={'game_year':'연도'})
+                pkind_stats_df = pkind_stats_df.set_index('연도')                
+                pkind_stats_df = stats_viewer_pitchname(pkind_stats_df)
+
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
+                    st.dataframe(pkind_stats_df, width=1600)
+
+            st.subheader(':gray[투구경향성]')
+
+            throws_swing_concat_df = pd.DataFrame()
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                throws_stats_df = season_pitchname(pitcher_raw_df)
+                throws_stats_df = throws_stats_df.set_index('game_year')
+                swing_viewer_df = swing_viewer_pitchname(throws_stats_df)
+
+                swing_viewer_df = swing_viewer_df.reset_index()
+                swing_viewer_df = swing_viewer_df.astype({'game_year':'str'})
+                swing_viewer_df = swing_viewer_df.rename(columns={'game_year':'연도'})
+
+                swing_f_row_df = swing_viewer_df.iloc[:1]
+                game_year = swing_f_row_df.iloc[0]['연도']
+                swing_f_row_df = swing_viewer_df[swing_viewer_df['연도'] == game_year]
+
+                swing_f_row_df['선수명'] = pitcher_name
+                swing_f_row_df.set_index('선수명', inplace=True)
+                
+                throws_swing_concat_df = pd.concat([throws_swing_concat_df, swing_f_row_df])
+
+            st.dataframe(throws_swing_concat_df, width=1600)
+            
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                throws_stats_df = season_pitchname(pitcher_raw_df)
+                throws_stats_df = throws_stats_df.rename(columns={'game_year':'연도'})
+                throws_stats_df = throws_stats_df.set_index('연도')
+                swing_viewer_df = swing_viewer_pitchname(throws_stats_df)
+
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
+                    st.dataframe(swing_viewer_df, width=1600)
+
+            st.divider()
+
+# -------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[타자유형별] 현황]')
+            st.subheader(':gray[기록 & 투구]')
+
+            throws_stats_concat_df = pd.DataFrame()
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                throws_stats_df = season_stand(pitcher_raw_df)
+                throws_stats_df = throws_stats_df.set_index('game_year')
+                stats_viewer_df = stats_viewer_stand(throws_stats_df)
+
+                stats_viewer_df = stats_viewer_df.reset_index()
+                stats_viewer_df = stats_viewer_df.astype({'game_year':'str'})
+                stats_viewer_df = stats_viewer_df.rename(columns={'game_year':'연도'})
+
+                stats_f_row_df = stats_viewer_df.iloc[:1]
+                game_year = stats_f_row_df.iloc[0]['연도']
+                stats_f_row_df = stats_viewer_df[stats_viewer_df['연도'] == game_year]
+
+                stats_f_row_df['선수명'] = pitcher_name
+                stats_f_row_df.set_index('선수명', inplace=True)
+                
+                throws_stats_concat_df = pd.concat([throws_stats_concat_df, stats_f_row_df])
+
+            st.dataframe(throws_stats_concat_df, width=1600)
+            
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                throws_stats_df = season_stand(pitcher_raw_df)
+                throws_stats_df = throws_stats_df.rename(columns={'game_year':'연도'})
+                throws_stats_df = throws_stats_df.set_index('연도')
+                stats_viewer_df = stats_viewer_stand(throws_stats_df)
+
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
+                    st.dataframe(stats_viewer_df, width=1600)
+
+            st.subheader(':gray[투구경향성]')
+
+            pkind_swing_concat_df = pd.DataFrame()
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                pkind_stats_df = season_stand(pitcher_raw_df)
+                pkind_stats_df = pkind_stats_df.set_index('game_year')
+                swing_viewer_df = swing_viewer_stand(pkind_stats_df)
+
+                swing_viewer_df = swing_viewer_df.reset_index()
+                swing_viewer_df = swing_viewer_df.astype({'game_year':'str'})
+                swing_viewer_df = swing_viewer_df.rename(columns={'game_year':'연도'})
+
+                swing_f_row_df = swing_viewer_df.iloc[:1]
+                game_year = swing_f_row_df.iloc[0]['연도']
+                swing_f_row_df = swing_viewer_df[swing_viewer_df['연도'] == game_year]
+
+                swing_f_row_df['선수명'] = pitcher_name
+                swing_f_row_df.set_index('선수명', inplace=True)
+                
+                pkind_swing_concat_df = pd.concat([pkind_swing_concat_df, swing_f_row_df])
+
+            st.dataframe(pkind_swing_concat_df, width=1600)
+            
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                pkind_stats_df = season_stand(pitcher_raw_df)
+                pkind_stats_df = pkind_stats_df.rename(columns={'game_year':'연도'})
+                pkind_stats_df = pkind_stats_df.set_index('연도')
+                swing_viewer_df = swing_viewer_stand(pkind_stats_df)
+
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
+                    st.dataframe(swing_viewer_df, width=1600)
+
+            st.divider()
+
+# -------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[타자유형 & 구종별] 현황]')
+            st.subheader(':gray[기록 & 투구]')
+
+            throws_stats_concat_df = pd.DataFrame()
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                throws_stats_df = season_stand_pitchname(pitcher_raw_df)
+                throws_stats_df = throws_stats_df.set_index('game_year')
+                stats_viewer_df = stats_viewer_stand_pitchname(throws_stats_df)
+
+                stats_viewer_df = stats_viewer_df.reset_index()
+                stats_viewer_df = stats_viewer_df.astype({'game_year':'str'})
+                stats_viewer_df = stats_viewer_df.rename(columns={'game_year':'연도'})
+
+                stats_f_row_df = stats_viewer_df.iloc[:1]
+                game_year = stats_f_row_df.iloc[0]['연도']
+                stats_f_row_df = stats_viewer_df[stats_viewer_df['연도'] == game_year]
+
+                stats_f_row_df['선수명'] = pitcher_name
+                stats_f_row_df.set_index('선수명', inplace=True)
+                
+                throws_stats_concat_df = pd.concat([throws_stats_concat_df, stats_f_row_df])
+
+            st.dataframe(throws_stats_concat_df, width=1600)
+            
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                throws_stats_df = season_stand_pitchname(pitcher_raw_df)
+                throws_stats_df = throws_stats_df.rename(columns={'game_year':'연도'})
+                throws_stats_df = throws_stats_df.set_index('연도')
+                stats_viewer_df = stats_viewer_stand_pitchname(throws_stats_df)
+
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
+                    st.dataframe(stats_viewer_df, width=1600)
+
+            st.subheader(':gray[투구경향성]')
+
+            pkind_swing_concat_df = pd.DataFrame()
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                pkind_stats_df = season_stand_pitchname(pitcher_raw_df)
+                pkind_stats_df = pkind_stats_df.set_index('game_year')
+                swing_viewer_df = swing_viewer_stand_pitchname(pkind_stats_df)
+
+                swing_viewer_df = swing_viewer_df.reset_index()
+                swing_viewer_df = swing_viewer_df.astype({'game_year':'str'})
+                swing_viewer_df = swing_viewer_df.rename(columns={'game_year':'연도'})
+
+                swing_f_row_df = swing_viewer_df.iloc[:1]
+                game_year = swing_f_row_df.iloc[0]['연도']
+                swing_f_row_df = swing_viewer_df[swing_viewer_df['연도'] == game_year]
+
+                swing_f_row_df['선수명'] = pitcher_name
+                swing_f_row_df.set_index('선수명', inplace=True)
+                
+                pkind_swing_concat_df = pd.concat([pkind_swing_concat_df, swing_f_row_df])
+
+            st.dataframe(pkind_swing_concat_df, width=1600)
+            
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitcher_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+
+                pkind_stats_df = season_stand_pitchname(pitcher_raw_df)
+                pkind_stats_df = pkind_stats_df.rename(columns={'game_year':'연도'})
+                pkind_stats_df = pkind_stats_df.set_index('연도')
+                swing_viewer_df = swing_viewer_stand_pitchname(pkind_stats_df)
+
+                with st.expander(f"연도별 상세기록:  {pitcher_name}"):
+                    st.dataframe(swing_viewer_df, width=1600)
+
+            st.divider()
+
+# -------------------------------------------------------------------------------------------------------
+# (무브먼트 ~ 최근5경기 이하 코드는 pitcher_name = pitcher 로만 변경, 나머지 100% 원본 유지)
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[무브먼트 차트] 현황]')
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                movement_chart_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                movement_chart_df = movement_chart_raw_df
+                game_year = movement_chart_df['game_year'].max()
+                movement_chart_df = movement_chart_df[movement_chart_df['game_year'] == game_year]
+                pitcher_name = pitcher  # ✅
+
+                st.subheader(f"{pitcher_name}, {game_year}")
+                col1, col2 = st.columns([3.8,6.2])
+                with col1: 
+                    season_movement_fig = season_movement_chart(movement_chart_df)
+                    st.plotly_chart(season_movement_fig, layout="wide", key=f"season_pitched_{pitcher}")
+                with col2:
+                    st.markdown("<div style='height: 320px;'></div>", unsafe_allow_html=True)
+                    season_movement_dataframe = movement_dataframe(movement_chart_df)
+                    st.dataframe(season_movement_dataframe, hide_index=True, width=950)
+
+                st.markdown("""<div style="text-align: right; font-size: 0.9em;">
+                    <span style="font-weight: bold;">색상 범례:</span> 
+                    빨강: 포심 / 핑크: 투심 / 보라: 커터 / 녹색 : 슬라이더 / 오랜지: 커브 / 골드: 스위퍼 / 파랑: 체인지업 / 갈색: 포크 
+                </div>""", unsafe_allow_html=True)
+                
+                years = sorted(movement_chart_raw_df['game_year'].unique(), reverse=True)
+                previous_years = [year for year in years if year != game_year]
+                
+                if previous_years:
+                    with st.expander(f"연도별 현황: {pitcher_name}"):
+                        for year_idx, year in enumerate(previous_years):
+                            st.subheader(f"{pitcher_name}, {year}")
+                            year_df = movement_chart_raw_df[movement_chart_raw_df['game_year'] == year]
+                            col1, col2 = st.columns([3.8,6.2])
+                            with col1: 
+                                season_movement_fig = season_movement_chart(year_df)
+                                st.plotly_chart(season_movement_fig, layout="wide", key=f"season_pitched_{pitcher}_{year}")
+                            with col2:
+                                st.markdown("<div style='height: 330px;'></div>", unsafe_allow_html=True)
+                                season_movement_dataframe = movement_dataframe(year_df)
+                                st.dataframe(season_movement_dataframe, hide_index=True, width=1100)
+
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[피치 트랙(Pitch Track)] 현황]')
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitchtrack_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                available_years = sorted(pitchtrack_raw_df['game_year'].unique(), reverse=True)
+                pitcher_name = pitcher  # ✅
+                
+                if len(available_years) >= 2:
+                    years_display = f"{available_years[0]}-{available_years[1]}"
+                    st.subheader(f"{pitcher_name}, {years_display}")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write(f"**{available_years[0]}**")
+                        latest_year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[0]]
+                        st.plotly_chart(season_pitchtrack_chart(latest_year_df), layout="wide", key=f"season_pitched_{pitcher}_latest")
+                    with col2:
+                        st.write(f"**{available_years[1]}**")
+                        previous_year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[1]]
+                        st.plotly_chart(season_pitchtrack_chart(previous_year_df), layout="wide", key=f"season_pitched_{pitcher}_previous")
+                else:
+                    year = available_years[0]
+                    st.subheader(f"{pitcher_name}, {year}")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write(f"**{year}**")
+                        year_df = pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == year]
+                        st.plotly_chart(season_pitchtrack_chart(year_df), layout="wide", key=f"season_pitched_{pitcher}_latest")
+
+                st.markdown("""<div style="text-align: right; font-size: 0.9em;">
+                    <span style="font-weight: bold;">색상 범례:</span> 
+                    빨강: 포심 / 핑크: 투심 / 보라: 커터 / 녹색 : 슬라이더 / 오랜지: 커브 / 골드: 스위퍼 / 파랑: 체인지업 / 갈색: 포크 
+                </div>""", unsafe_allow_html=True)
+
+# -------------------------------------------------------------------------------------------------------
+# 로케이션 ~ 최근5경기: pitcher_name = pitcher 로만 변경, 나머지 원본 100% 유지
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[로케이션(Location)] 현황]')
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitchtrack_raw_df = globals()[f"df_{pitcher}"] = pitcher_df
+                available_years = sorted(pitchtrack_raw_df['game_year'].unique(), reverse=True)
+                pitcher_name = pitcher  # ✅
+                
+                if len(available_years) >= 3:
+                    years_display = f"{available_years[0]}-{available_years[2]}"
+                    st.subheader(f"{pitcher_name}, {years_display}")
+                    col1, col2, col3, col4 = st.columns([1,3,3,3])
+                    with col1:
+                        st.markdown("""<div style="height: 950px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 290px 0;">
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">우타자</div>
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">좌타자</div>
+                        </div>""", unsafe_allow_html=True)
+                    with col2:
+                        st.markdown(f"<h3 style='text-align: center;'>{available_years[0]}</h3>", unsafe_allow_html=True)
+                        st.plotly_chart(season_pitched_fig(pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[0]]), use_container_width=True, key=f"season_location_{pitcher}_latest")
+                    with col3:
+                        st.markdown(f"<h3 style='text-align: center;'>{available_years[1]}</h3>", unsafe_allow_html=True)
+                        st.plotly_chart(season_pitched_fig(pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[1]]), use_container_width=True, key=f"season_location_{pitcher}_previous")
+                    with col4:
+                        st.markdown(f"<h3 style='text-align: center;'>{available_years[2]}</h3>", unsafe_allow_html=True)
+                        st.plotly_chart(season_pitched_fig(pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[2]]), use_container_width=True, key=f"season_location_{pitcher}_third")
+                elif len(available_years) == 2:
+                    years_display = f"{available_years[0]}-{available_years[1]}"
+                    st.subheader(f"{pitcher_name}, {years_display}")
+                    col1, col2, col3, col4 = st.columns([0.3,3.2,3.2,3.2])
+                    with col1:
+                        st.markdown("""<div style="height: 950px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 290px 0;">
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">우타자</div>
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">좌타자</div>
+                        </div>""", unsafe_allow_html=True)
+                    with col2:
+                        st.write(f"**{available_years[0]}**")
+                        st.plotly_chart(season_pitched_fig(pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[0]]), use_container_width=True, key=f"season_location_{pitcher}_latest")
+                    with col3:
+                        st.write(f"**{available_years[1]}**")
+                        st.plotly_chart(season_pitched_fig(pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == available_years[1]]), use_container_width=True, key=f"season_location_{pitcher}_previous")
+                    with col4:
+                        st.write("**데이터 없음**")
+                else:
+                    year = available_years[0]
+                    st.subheader(f"{pitcher_name}, {year}")
+                    col1, col2, col3, col4 = st.columns([1,3,3,3])
+                    with col1:
+                        st.markdown("""<div style="height: 950px; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 290px 0;">
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">우타자</div>
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold;">좌타자</div>
+                        </div>""", unsafe_allow_html=True)
+                    with col2:
+                        st.write(f"**{year}**")
+                        st.plotly_chart(season_pitched_fig(pitchtrack_raw_df[pitchtrack_raw_df['game_year'] == year]), use_container_width=True, key=f"season_location_{pitcher}")
+                    with col3:
+                        st.write("**데이터 없음**")
+                    with col4:
+                        st.write("**데이터 없음**")
+
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[구종별 로케이션(Location)] 현황]')
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                location_chart_df = globals()[f"df_{pitcher}"] = pitcher_df
+                pitcher_name = pitcher  # ✅
+                years = sorted(location_chart_df['game_year'].unique(), reverse=True)
+                
+                if len(years) > 0:
+                    current_year = years[0]
+                    st.subheader(f"{pitcher_name} - {current_year} 시즌 구종별 로케이션")
+                    current_year_df = location_chart_df[location_chart_df['game_year'] == current_year]
+                    
+                    if not current_year_df.empty:
+                        available_pitches = current_year_df['pitch_name'].unique().tolist()
+                        desired_order = ['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Sweeper', 'Curveball', 'Changeup', 'Split-Finger']
+                        ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
+                        pitch_count = len(ordered_pitches)
+                        total_width = pitch_count * 300
+                        pitch_figures = {}
+                        for pitch_name in ordered_pitches:
+                            pitch_df = current_year_df[current_year_df['pitch_name'] == pitch_name]
+                            pitch_figures[pitch_name] = season_location_fig(pitch_df, pitch_name)
+                        html_components = []
+                        for pitch_name, fig in pitch_figures.items():
+                            fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
+                            html_components.append(f"""<div style="display: inline-block; width: 270px; height: 600px; margin-right: 0px;">
+                                <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
+                                {fig_html}</div>""")
+                        label_html = """<div style="display: inline-block; width: 50px; height: 900px; vertical-align: top; padding-top: 200px;">
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 80px;">우타자</div>
+                            <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 230px;">좌타자</div></div>"""
+                        complete_html = f"""<div style="width: 100%; height: 750px; border: none; border-radius: 5px; padding: 10px; margin-bottom: 20px; background-color: white;">
+                            <div style="width: 100%; height: 100%; overflow-x: scroll; overflow-y: hidden; -webkit-overflow-scrolling: touch;">
+                                <div style="width: {total_width + 50}px; height: 800px;">{label_html}{''.join(html_components)}</div></div></div>"""
+                        html(complete_html, height=650)
+                    else:
+                        st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
+                    
+                    if len(years) > 1:
+                        with st.expander((f"연도별 현황: {pitcher_name}")):
+                            for year in years[1:]:
+                                st.subheader(f"{year}년 시즌")
+                                year_df = location_chart_df[location_chart_df['game_year'] == year]
+                                if not year_df.empty:
+                                    available_pitches = year_df['pitch_name'].unique().tolist()
+                                    ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
+                                    pitch_count = len(ordered_pitches)
+                                    total_width = pitch_count * 300
+                                    pitch_figures = {}
+                                    for pitch_name in ordered_pitches:
+                                        pitch_df = year_df[year_df['pitch_name'] == pitch_name]
+                                        pitch_figures[pitch_name] = season_location_fig(pitch_df, pitch_name)
+                                    html_components = []
+                                    for pitch_name, fig in pitch_figures.items():
+                                        fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
+                                        html_components.append(f"""<div style="display: inline-block; width: 270px; height: 600px; margin-right: 0px;">
+                                            <div style="text-align: center; font-weight: bold; margin-bottom: 5px;">{pitch_name}</div>
+                                            {fig_html}</div>""")
+                                    label_html = """<div style="display: inline-block; width: 50px; height: 700px; vertical-align: top; padding-top: 200px;">
+                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-bottom: 80px;">우타자</div>
+                                        <div style="transform: rotate(-90deg); transform-origin: center; font-weight: bold; margin-top: 230px;">좌타자</div></div>"""
+                                    complete_html = f"""<div style="width: 100%; height: 750px; border: none; border-radius: 5px; padding: 5px; margin-bottom: 10px; background-color: white;">
+                                        <div style="width: 100%; height: 100%; overflow-x: scroll; overflow-y: hidden; -webkit-overflow-scrolling: touch;">
+                                            <div style="width: {total_width + 40}px; height: 600px;">{label_html}{''.join(html_components)}</div></div></div>"""
+                                    html(complete_html, height=650)
+                                else:
+                                    st.write(f"{pitcher_name}의 {year}년 구종 데이터가 없습니다.")
+                                if year != years[-1]:
+                                    st.markdown("---")
+                    else:
+                        st.write(f"{pitcher_name}의 이전 시즌 데이터가 없습니다.")
+                    st.markdown("---")
+
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[타자유형별 스윙맵(Swing Map)] 현황]')
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                swing_map_stnad_df = pitcher_df
+                pitcher_name = pitcher  # ✅
+                years = sorted(swing_map_stnad_df['game_year'].unique(), reverse=True)
+                
+                if len(years) > 0:
+                    current_year = years[0]
+                    st.subheader(f"{pitcher_name} - {current_year} 시즌 타자유형별 로케이션")
+                    current_year_df = swing_map_stnad_df[swing_map_stnad_df['game_year'] == current_year]
+                    if not current_year_df.empty:
+                        create_pitcher_swing_map_stand(current_year_df, pitcher_name, current_year)
+                    else:
+                        st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
+
+                    st.markdown("""<div style="text-align: left; font-size: 0.9em;"><span style="font-weight: bold;">기호 범례:</span> 
+                        파란색: 콜 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃</div>""", unsafe_allow_html=True)
+                    st.markdown("""<div style="text-align: left; font-size: 0.9em;"><span style="font-weight: bold;">색상 범례:</span> 
+                        원: 포심 / 삼각형-아래(역삼각형): 투심 / 삼각형-우측아래: 커터 / 삼각형-우측: 슬라이더 / 삼각형-위: 커브 / 다이아몬드: 체인지업 / 사각형: 스플리터 / 십자가: 스위퍼</div>""", unsafe_allow_html=True)
+                    
+                    if len(years) > 1:
+                        with st.expander(f"연도별 현황황: {pitcher_name}"):
+                            for year in years[1:]:
+                                st.subheader(f"{year}년 시즌")
+                                year_df = swing_map_stnad_df[swing_map_stnad_df['game_year'] == year]
+                                if not year_df.empty:
+                                    create_pitcher_swing_map_stand(year_df, pitcher_name, year)
+                                else:
+                                    st.write(f"{pitcher_name}의 {year}년 구종 데이터가 없습니다.")
+                                if year != years[-1]:
+                                    st.markdown("---")
+                    else:
+                        st.write(f"{pitcher_name}의 이전 시즌 데이터가 없습니다.")
+                    st.markdown("---")
+
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[구종별 스윙맵(Swing Map)] 현황]')
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                swing_map_df = pitcher_df
+                pitcher_name = pitcher  # ✅
+                years = sorted(swing_map_df['game_year'].unique(), reverse=True)
+                desired_order = ['4-Seam Fastball', '2-Seam Fastball', 'Cutter', 'Slider', 'Sweeper', 'Curveball', 'Changeup', 'Split-Finger']
+                
+                if len(years) > 0:
+                    current_year = years[0]
+                    st.subheader(f"{pitcher_name} - {current_year} 시즌 구종별 로케이션")
+                    current_year_df = swing_map_df[swing_map_df['game_year'] == current_year]
+                    if not current_year_df.empty:
+                        available_pitches = current_year_df['pitch_name'].unique().tolist()
+                        ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
+                        create_pitcher_swing_map(current_year_df, pitcher_name, current_year, ordered_pitches)
+                    else:
+                        st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
+
+                    st.markdown("""<div style="text-align: left; font-size: 0.9em;"><span style="font-weight: bold;">기호 범례:</span> 
