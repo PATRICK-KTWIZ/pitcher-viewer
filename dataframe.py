@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from io import BytesIO
 import requests
+import streamlit as st
 
 # ════════════════════════════════════════════════════════════
 # 1. 설정
@@ -35,10 +36,6 @@ MIN_YEAR  = 2023
 # ════════════════════════════════════════════════════════════
 
 def load_league_data(league_name: str, min_year: int = MIN_YEAR) -> pd.DataFrame:
-    """
-    league_name 에 해당하는 parquet 데이터를 로드한다.
-    로컬 캐시가 있으면 캐시에서, 없으면 GitHub Release에서 다운로드한다.
-    """
     if league_name not in LEAGUE_FILES:
         print(f"[{league_name}] LEAGUE_FILES에 정의되지 않은 리그입니다.")
         return pd.DataFrame()
@@ -46,13 +43,11 @@ def load_league_data(league_name: str, min_year: int = MIN_YEAR) -> pd.DataFrame
     file_name  = LEAGUE_FILES[league_name]
     cache_path = os.path.join(CACHE_DIR, file_name)
 
-    # ── 로컬 캐시 우선 로드 ───────────────────────────────────────────────
     if os.path.exists(cache_path):
         print(f"[{league_name}] 로컬 캐시에서 로드 중...")
         df_tmp = pd.read_parquet(cache_path)
         return df_tmp[df_tmp["game_year"] >= min_year] if min_year else df_tmp
 
-    # ── GitHub Release에서 다운로드 ──────────────────────────────────────
     print(f"[{league_name}] GitHub Release에서 다운로드 중...")
     release_url = f"https://api.github.com/repos/{OWNER}/{REPO}/releases/tags/{TAG_NAME}"
     headers     = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
@@ -88,193 +83,253 @@ def load_league_data(league_name: str, min_year: int = MIN_YEAR) -> pd.DataFrame
 
 
 # ════════════════════════════════════════════════════════════
-# 3. definition.py 에서 사용하는 집계 헬퍼 함수
+# 3. 집계 헬퍼 함수 (definition.py 에서 사용)
 # ════════════════════════════════════════════════════════════
 
-def base_df(player_df: pd.DataFrame) -> pd.DataFrame:
-    """
-    투수 원시 데이터를 game_year 단위로 집계한 베이스 DataFrame 반환.
-    """
-    sdf = player_df.copy()
+def base_df(player_df):
 
-    # ── 기본 카운트 집계 ──────────────────────────────────────────────────
-    agg = sdf.groupby("game_year").agg(
-        game_date      = ("game_date",       "nunique"),   # 경기수
-        pitname        = ("pitname",         "count"),     # 투구수
-        pa             = ("pa_flag",         "sum"),       # 타석
-        ab             = ("ab_flag",         "sum"),       # 타수
-        hit            = ("hit",             "sum"),
-        walk           = ("walk",            "sum"),
-        strikeout      = ("strikeout",       "sum"),
-        inplay         = ("inplay",          "sum"),
-        exit_velocity  = ("exit_velocity",   "mean"),
-        launch_angle   = ("launch_angle",    "mean"),
-        total_bases    = ("total_bases",     "sum"),
-        # 존 관련
-        z_pitch        = ("z_pitch",         "sum"),
-        o_pitch        = ("o_pitch",         "sum"),
-        z_swing        = ("z_swing",         "sum"),
-        o_swing        = ("o_swing",         "sum"),
-        z_contact      = ("z_contact",       "sum"),
-        o_contact      = ("o_contact",       "sum"),
-        z_inplay       = ("z_inplay",        "sum"),
-        o_inplay       = ("o_inplay",        "sum"),
-        first_swing    = ("first_swing",     "sum"),
-        first_pitch    = ("first_pitch",     "sum"),
-        swing          = ("swing",           "sum"),
-        whiff          = ("whiff",           "sum"),
-        inplay_sw      = ("inplay_sw",       "sum"),
-        # LSA
-        lsa1           = ("lsa1",            "sum"),
-        lsa2           = ("lsa2",            "sum"),
-        lsa3           = ("lsa3",            "sum"),
-        lsa4           = ("lsa4",            "sum"),
-        lsa5           = ("lsa5",            "sum"),
-        lsa6           = ("lsa6",            "sum"),
-        # 존외 스윙 어프로치
-        high_z_swing   = ("high_z_swing",    "sum"),
-        high_o_swing   = ("high_o_swing",    "sum"),
-        low_z_swing    = ("low_z_swing",     "sum"),
-        low_o_swing    = ("low_o_swing",     "sum"),
-    ).reset_index()
+    game = pd.pivot_table(player_df, index='game_year', values='game_date', aggfunc='nunique', margins=False)
+    pitched = pd.pivot_table(player_df, index='game_year', values='pitname', aggfunc='count', margins=False)
+    rel_speed = pd.pivot_table(player_df, index='game_year', values='rel_speed(km)', aggfunc='mean', margins=False)
+    inplay = pd.pivot_table(player_df, index='game_year', values='inplay', aggfunc='sum', margins=False)
+    exit_velocity = pd.pivot_table(player_df, index='game_year', values='exit_velocity', aggfunc='mean', margins=False)
+    launch_angleX = pd.pivot_table(player_df, index='game_year', values='launch_angleX', aggfunc='mean', margins=False)
 
-    return agg
+    hit = pd.pivot_table(player_df, index='game_year', values='hit', aggfunc='sum', margins=False)
+    ab = pd.pivot_table(player_df, index='game_year', values='ab', aggfunc='sum', margins=False)
+    pa = pd.pivot_table(player_df, index='game_year', values='pa', aggfunc='sum', margins=False)
+    single = pd.pivot_table(player_df, index='game_year', values='single', aggfunc='sum', margins=False)
+    double = pd.pivot_table(player_df, index='game_year', values='double', aggfunc='sum', margins=False)
+    triple = pd.pivot_table(player_df, index='game_year', values='triple', aggfunc='sum', margins=False)
+    home_run = pd.pivot_table(player_df, index='game_year', values='home_run', aggfunc='sum', margins=False)
+    walk = pd.pivot_table(player_df, index='game_year', values='walk', aggfunc='sum', margins=False)
+    strikeout = pd.pivot_table(player_df, index='game_year', values='strikeout', aggfunc='sum', margins=False)
+    hit_by_pitch = pd.pivot_table(player_df, index='game_year', values='hit_by_pitch', aggfunc='sum', margins=False)
+    sac_fly = pd.pivot_table(player_df, index='game_year', values='sac_fly', aggfunc='sum', margins=False)
 
+    z_in = pd.pivot_table(player_df, index='game_year', values='z_in', aggfunc='sum', margins=False)
+    z_swing = pd.pivot_table(player_df, index='game_year', values='z_swing', aggfunc='sum', margins=False)
+    z_con = pd.pivot_table(player_df, index='game_year', values='z_con', aggfunc='sum', margins=False)
+    z_out = pd.pivot_table(player_df, index='game_year', values='z_out', aggfunc='sum', margins=False)
+    z_inplay = pd.pivot_table(player_df, index='game_year', values='z_inplay', aggfunc='sum', margins=False)
+    o_swing = pd.pivot_table(player_df, index='game_year', values='o_swing', aggfunc='sum', margins=False)
+    o_con = pd.pivot_table(player_df, index='game_year', values='o_con', aggfunc='sum', margins=False)
+    o_inplay = pd.pivot_table(player_df, index='game_year', values='o_inplay', aggfunc='sum', margins=False)
 
-def pivot_base_df(player_df: pd.DataFrame, pivot_index) -> pd.DataFrame:
-    """
-    pivot_index 를 추가 그룹 키로 사용하는 집계 DataFrame 반환.
-    pivot_index : str 또는 list[str]
-    """
-    sdf = player_df.copy()
+    f_swing = pd.pivot_table(player_df, index='game_year', values='f_swing', aggfunc='sum', margins=False)
+    f_pitch = pd.pivot_table(player_df, index='game_year', values='f_pitch', aggfunc='sum', margins=False)
+    swing = pd.pivot_table(player_df, index='game_year', values='swing', aggfunc='sum', margins=False)
+    whiff = pd.pivot_table(player_df, index='game_year', values='whiff', aggfunc='sum', margins=False)
 
-    if isinstance(pivot_index, str):
-        group_keys = ["game_year", pivot_index]
-    else:
-        group_keys = ["game_year"] + list(pivot_index)
+    weak = pd.pivot_table(player_df, index='game_year', values='weak', aggfunc='sum', margins=False)
+    topped = pd.pivot_table(player_df, index='game_year', values='topped', aggfunc='sum', margins=False)
+    under = pd.pivot_table(player_df, index='game_year', values='under', aggfunc='sum', margins=False)
+    flare = pd.pivot_table(player_df, index='game_year', values='flare', aggfunc='sum', margins=False)
+    solid_contact = pd.pivot_table(player_df, index='game_year', values='solid_contact', aggfunc='sum', margins=False)
+    barrel = pd.pivot_table(player_df, index='game_year', values='barrel', aggfunc='sum', margins=False)
 
-    agg = sdf.groupby(group_keys).agg(
-        game_date      = ("game_date",       "nunique"),
-        pitname        = ("pitname",         "count"),
-        pa             = ("pa_flag",         "sum"),
-        ab             = ("ab_flag",         "sum"),
-        hit            = ("hit",             "sum"),
-        walk           = ("walk",            "sum"),
-        strikeout      = ("strikeout",       "sum"),
-        inplay         = ("inplay",          "sum"),
-        exit_velocity  = ("exit_velocity",   "mean"),
-        launch_angle   = ("launch_angle",    "mean"),
-        total_bases    = ("total_bases",     "sum"),
-        z_pitch        = ("z_pitch",         "sum"),
-        o_pitch        = ("o_pitch",         "sum"),
-        z_swing        = ("z_swing",         "sum"),
-        o_swing        = ("o_swing",         "sum"),
-        z_contact      = ("z_contact",       "sum"),
-        o_contact      = ("o_contact",       "sum"),
-        z_inplay       = ("z_inplay",        "sum"),
-        o_inplay       = ("o_inplay",        "sum"),
-        first_swing    = ("first_swing",     "sum"),
-        first_pitch    = ("first_pitch",     "sum"),
-        swing          = ("swing",           "sum"),
-        whiff          = ("whiff",           "sum"),
-        inplay_sw      = ("inplay_sw",       "sum"),
-        lsa1           = ("lsa1",            "sum"),
-        lsa2           = ("lsa2",            "sum"),
-        lsa3           = ("lsa3",            "sum"),
-        lsa4           = ("lsa4",            "sum"),
-        lsa5           = ("lsa5",            "sum"),
-        lsa6           = ("lsa6",            "sum"),
-        high_z_swing   = ("high_z_swing",    "sum"),
-        high_o_swing   = ("high_o_swing",    "sum"),
-        low_z_swing    = ("low_z_swing",     "sum"),
-        low_o_swing    = ("low_o_swing",     "sum"),
-    ).reset_index()
-
-    return agg
+    merged_base_df = pd.concat([game, pitched, rel_speed, inplay, exit_velocity, launch_angleX, hit, ab, pa, single, double, triple, home_run, walk, strikeout, hit_by_pitch, sac_fly,
+                        z_in, z_swing, z_con, z_out, z_inplay, o_swing, o_con, o_inplay, f_swing, f_pitch, swing, whiff,
+                        weak, topped, under, flare, solid_contact, barrel], axis=1)
+    
+    return merged_base_df
 
 
-def stats_df(agg: pd.DataFrame) -> pd.DataFrame:
-    """
-    base_df / pivot_base_df 결과를 받아 비율 지표를 계산하고
-    game_year (+ 추가 인덱스) 를 인덱스로 설정한 DataFrame 반환.
-    """
-    df = agg.copy()
+def pivot_base_df(player_df, pivot_index):
 
-    # ── 비율 지표 계산 ────────────────────────────────────────────────────
-    def _safe(num, den, scale=1, default=0.0):
-        return np.where(den > 0, (num / den) * scale, default)
+    game = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='game_date', aggfunc='nunique', margins=True))
+    pitched = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='pitname', aggfunc='count', margins=True))
+    rel_speed = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='rel_speed(km)', aggfunc='mean', margins=True))
+    inplay = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='inplay', aggfunc='sum', margins=True))
+    exit_velocity = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='exit_velocity', aggfunc='mean', margins=True))
+    launch_angleX = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='launch_angleX', aggfunc='mean', margins=True))
+    hit_spin_rate = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='hit_spin_rate', aggfunc='mean', margins=True))
 
-    df["inplay_pit"]    = _safe(df["inplay"],    df["pitname"])
-    df["launch_angleX"] = df["launch_angle"].round(1)
+    hit = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='hit', aggfunc='sum', margins=True))
+    ab = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='ab', aggfunc='sum', margins=True))
+    pa = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='pa', aggfunc='sum', margins=True))
+    single = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='single', aggfunc='sum', margins=True))
+    double = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='double', aggfunc='sum', margins=True))
+    triple = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='triple', aggfunc='sum', margins=True))
+    home_run = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='home_run', aggfunc='sum', margins=True))
+    walk = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='walk', aggfunc='sum', margins=True))
+    strikeout = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='strikeout', aggfunc='sum', margins=True))
+    hit_by_pitch = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='hit_by_pitch', aggfunc='sum', margins=True))
+    sac_fly = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='sac_fly', aggfunc='sum', margins=True))
 
-    # 타율 / 출루율 / 장타율 / OPS
-    df["avg"] = _safe(df["hit"],                          df["ab"])
-    df["obp"] = _safe(df["hit"] + df["walk"],             df["pa"])
-    df["slg"] = _safe(df["total_bases"],                  df["ab"])
-    df["ops"] = df["obp"] + df["slg"]
+    z_in = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='z_in', aggfunc='sum', margins=True))
+    z_swing = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='z_swing', aggfunc='sum', margins=True))
+    z_con = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='z_con', aggfunc='sum', margins=True))
+    z_out = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='z_out', aggfunc='sum', margins=True))
+    z_inplay = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='z_inplay', aggfunc='sum', margins=True))
+    o_swing = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='o_swing', aggfunc='sum', margins=True))
+    o_con = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='o_con', aggfunc='sum', margins=True))
+    o_inplay = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='o_inplay', aggfunc='sum', margins=True))
 
-    # LSA 비율
-    lsa_total        = df[["lsa1","lsa2","lsa3","lsa4","lsa5","lsa6"]].sum(axis=1)
-    df["weak"]        = _safe(df["lsa1"], lsa_total, 100)
-    df["topped"]      = _safe(df["lsa2"], lsa_total, 100)
-    df["under"]       = _safe(df["lsa3"], lsa_total, 100)
-    df["flare"]       = _safe(df["lsa4"], lsa_total, 100)
-    df["solid_contact"]= _safe(df["lsa5"], lsa_total, 100)
-    df["barrel"]      = _safe(df["lsa6"], lsa_total, 100)
+    f_swing = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='f_swing', aggfunc='sum', margins=True))
+    f_pitch = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='f_pitch', aggfunc='sum', margins=True))
+    swing = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='swing', aggfunc='sum', margins=True))
+    whiff = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='whiff', aggfunc='sum', margins=True))
 
-    # 존 / 스윙 지표
-    total_pitch       = df["z_pitch"] + df["o_pitch"]
-    df["z%"]          = _safe(df["z_pitch"],   total_pitch,   100)
-    df["o%"]          = _safe(df["o_pitch"],   total_pitch,   100)
-    df["z_swing%"]    = _safe(df["z_swing"],   df["z_pitch"], 100)
-    df["o_swing%"]    = _safe(df["o_swing"],   df["o_pitch"], 100)
-    df["z_con%"]      = _safe(df["z_contact"], df["z_swing"], 100)
-    df["o_con%"]      = _safe(df["o_contact"], df["o_swing"], 100)
-    df["z_inplay%"]   = _safe(df["z_inplay"],  df["z_swing"], 100)
-    df["o_inplay%"]   = _safe(df["o_inplay"],  df["o_swing"], 100)
-    df["f_swing%"]    = _safe(df["first_swing"],df["first_pitch"], 100)
-    df["swing%"]      = _safe(df["swing"],     df["pitname"], 100)
-    df["whiff%"]      = _safe(df["whiff"],     df["swing"],   100)
-    df["inplay_sw"]   = _safe(df["inplay_sw"], df["swing"],   100)
-    df["plus_lsa4"]   = df["flare"] + df["solid_contact"] + df["barrel"]
+    weak = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='weak', aggfunc='sum', margins=True))
+    topped = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='topped', aggfunc='sum', margins=True))
+    under = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='under', aggfunc='sum', margins=True))
+    flare = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='flare', aggfunc='sum', margins=True))
+    solid_contact = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='solid_contact', aggfunc='sum', margins=True))
+    barrel = player_df.groupby(['game_year']).apply(lambda x: x.pivot_table(index=pivot_index, values='barrel', aggfunc='sum', margins=True))
 
-    # 타격 어프로치 분류
-    league_z_swing_avg = 65.0   # 리그 평균값 (필요 시 조정)
-    league_o_swing_avg = 30.0
-    df["approach"] = np.select(
-        [
-            (df["z_swing%"] >= league_z_swing_avg) & (df["o_swing%"] >= league_o_swing_avg),
-            (df["z_swing%"] >= league_z_swing_avg) & (df["o_swing%"] <  league_o_swing_avg),
-            (df["z_swing%"] <  league_z_swing_avg) & (df["o_swing%"] >= league_o_swing_avg),
-            (df["z_swing%"] <  league_z_swing_avg) & (df["o_swing%"] <  league_o_swing_avg),
-        ],
-        ["Free Swinger", "Zone Contact", "Chase", "Patient"],
-        default="Unknown"
-    )
+    pivot_df = pd.concat([game, pitched, rel_speed, inplay, exit_velocity, launch_angleX, hit_spin_rate, hit, ab, pa, single, double, triple, home_run, walk, strikeout, hit_by_pitch, sac_fly,
+                        z_in, z_swing, z_con, z_out, z_inplay, o_swing, o_con, o_inplay, f_swing, f_pitch, swing, whiff,
+                        weak, topped, under, flare, solid_contact, barrel], axis=1)
+    
+    return pivot_df
 
-    # ── 반올림 ────────────────────────────────────────────────────────────
-    pct_cols = ["z%","o%","z_swing%","o_swing%","z_con%","o_con%",
-                "z_inplay%","o_inplay%","f_swing%","swing%","whiff%","inplay_sw",
-                "plus_lsa4","weak","topped","under","flare","solid_contact","barrel"]
-    df[pct_cols]         = df[pct_cols].round(1)
-    df["avg"]            = df["avg"].round(3)
-    df["obp"]            = df["obp"].round(3)
-    df["slg"]            = df["slg"].round(3)
-    df["ops"]            = df["ops"].round(3)
-    df["exit_velocity"]  = df["exit_velocity"].round(1)
-    df["inplay_pit"]     = df["inplay_pit"].round(3)
 
-    # ── 인덱스 설정 ───────────────────────────────────────────────────────
-    # game_year 외 추가 컬럼이 있으면 MultiIndex
-    extra_cols = [c for c in df.columns
-                  if c not in (
-                      ["game_year"] +
-                      list(agg.columns[agg.columns != "game_year"])
-                  ) or c in ["stand", "pitch_name"]]
-    index_cols = ["game_year"]
-    for c in ["stand", "pitch_name"]:
-        if c in df.columns:
-            index_cols.append(c)
+def stats_df(merged_base_df):
+    merged_base_df['avg'] = 0.0
+    merged_base_df['obp'] = 0.0
+    merged_base_df['slg'] = 0.0
+    merged_base_df['ops'] = 0.0
+    
+    mask_ab = merged_base_df['ab'] > 0
+    if mask_ab.any():
+        merged_base_df.loc[mask_ab, 'avg'] = merged_base_df.loc[mask_ab, 'hit'] / merged_base_df.loc[mask_ab, 'ab']
+    
+    obp_denominator = merged_base_df['ab'] + merged_base_df['hit_by_pitch'] + merged_base_df['walk'] + merged_base_df['sac_fly']
+    mask_obp = obp_denominator > 0
+    if mask_obp.any():
+        obp_numerator = merged_base_df['hit'] + merged_base_df['hit_by_pitch'] + merged_base_df['walk']
+        merged_base_df.loc[mask_obp, 'obp'] = obp_numerator[mask_obp] / obp_denominator[mask_obp]
+    
+    slg_numerator = ((merged_base_df['single'] * 1) + (merged_base_df['double'] * 2) + 
+                     (merged_base_df['triple'] * 3) + (merged_base_df['home_run'] * 4))
+    if mask_ab.any():
+        merged_base_df.loc[mask_ab, 'slg'] = slg_numerator[mask_ab] / merged_base_df.loc[mask_ab, 'ab']
+    
+    merged_base_df['ops'] = merged_base_df['obp'] + merged_base_df['slg']
+    
+    mask_player = merged_base_df['pitname'] > 0
+    if mask_player.any():
+        merged_base_df.loc[mask_player, 'z%'] = merged_base_df.loc[mask_player, 'z_in'] / merged_base_df.loc[mask_player, 'pitname']
+        merged_base_df.loc[mask_player, 'inplay_pit'] = merged_base_df.loc[mask_player, 'inplay'] / merged_base_df.loc[mask_player, 'pitname']
+    
+    mask_z_in = merged_base_df['z_in'] > 0
+    if mask_z_in.any():
+        merged_base_df.loc[mask_z_in, 'z_swing%'] = merged_base_df.loc[mask_z_in, 'z_swing'] / merged_base_df.loc[mask_z_in, 'z_in']
+    
+    mask_z_swing = merged_base_df['z_swing'] > 0
+    if mask_z_swing.any():
+        merged_base_df.loc[mask_z_swing, 'z_con%'] = merged_base_df.loc[mask_z_swing, 'z_con'] / merged_base_df.loc[mask_z_swing, 'z_swing']
+        merged_base_df.loc[mask_z_swing, 'z_inplay%'] = merged_base_df.loc[mask_z_swing, 'z_inplay'] / merged_base_df.loc[mask_z_swing, 'z_swing']
+    
+    if mask_player.any():
+        merged_base_df.loc[mask_player, 'o%'] = merged_base_df.loc[mask_player, 'z_out'] / merged_base_df.loc[mask_player, 'pitname']
+    
+    mask_z_out = merged_base_df['z_out'] > 0
+    if mask_z_out.any():
+        merged_base_df.loc[mask_z_out, 'o_swing%'] = merged_base_df.loc[mask_z_out, 'o_swing'] / merged_base_df.loc[mask_z_out, 'z_out']
+    
+    mask_o_swing = merged_base_df['o_swing'] > 0
+    if mask_o_swing.any():
+        merged_base_df.loc[mask_o_swing, 'o_con%'] = merged_base_df.loc[mask_o_swing, 'o_con'] / merged_base_df.loc[mask_o_swing, 'o_swing']
+        merged_base_df.loc[mask_o_swing, 'o_inplay%'] = merged_base_df.loc[mask_o_swing, 'o_inplay'] / merged_base_df.loc[mask_o_swing, 'o_swing']
+    
+    mask_f_pitch = merged_base_df['f_pitch'] > 0
+    if mask_f_pitch.any():
+        merged_base_df.loc[mask_f_pitch, 'f_swing%'] = merged_base_df.loc[mask_f_pitch, 'f_swing'] / merged_base_df.loc[mask_f_pitch, 'f_pitch']
+    
+    if mask_player.any():
+        merged_base_df.loc[mask_player, 'swing%'] = merged_base_df.loc[mask_player, 'swing'] / merged_base_df.loc[mask_player, 'pitname']
+    
+    mask_swing = merged_base_df['swing'] > 0
+    if mask_swing.any():
+        merged_base_df.loc[mask_swing, 'whiff%'] = merged_base_df.loc[mask_swing, 'whiff'] / merged_base_df.loc[mask_swing, 'swing']
+        merged_base_df.loc[mask_swing, 'inplay_sw'] = merged_base_df.loc[mask_swing, 'inplay'] / merged_base_df.loc[mask_swing, 'swing']
 
-    df = df.set_index(index_cols)
-    return df
+    merged_base_df['total_contact'] = (merged_base_df['weak'] + merged_base_df['topped'] + 
+                                       merged_base_df['under'] + merged_base_df['flare'] + 
+                                       merged_base_df['solid_contact'] + merged_base_df['barrel'])
+    
+    mask_contact = merged_base_df['total_contact'] > 0
+    if mask_contact.any():
+        merged_base_df.loc[mask_contact, 'weak']         = merged_base_df.loc[mask_contact, 'weak']         / merged_base_df.loc[mask_contact, 'total_contact']
+        merged_base_df.loc[mask_contact, 'topped']       = merged_base_df.loc[mask_contact, 'topped']       / merged_base_df.loc[mask_contact, 'total_contact']
+        merged_base_df.loc[mask_contact, 'under']        = merged_base_df.loc[mask_contact, 'under']        / merged_base_df.loc[mask_contact, 'total_contact']
+        merged_base_df.loc[mask_contact, 'flare']        = merged_base_df.loc[mask_contact, 'flare']        / merged_base_df.loc[mask_contact, 'total_contact']
+        merged_base_df.loc[mask_contact, 'solid_contact']= merged_base_df.loc[mask_contact, 'solid_contact']/ merged_base_df.loc[mask_contact, 'total_contact']
+        merged_base_df.loc[mask_contact, 'barrel']       = merged_base_df.loc[mask_contact, 'barrel']       / merged_base_df.loc[mask_contact, 'total_contact']
+
+    merged_base_df['plus_lsa4'] = merged_base_df['flare'] + merged_base_df['solid_contact'] + merged_base_df['barrel']
+    
+    kbo_z_swing = 0.654
+    kbo_o_swing = 0.261
+    valid_rows = merged_base_df['z_swing%'].notna() & merged_base_df['o_swing%'].notna()
+    merged_base_df['approach'] = 'Not Specified'
+    if valid_rows.any():
+        condition = [
+            (merged_base_df['z_swing%'] >= kbo_z_swing) & (merged_base_df['o_swing%'] >= kbo_o_swing) & valid_rows,
+            (merged_base_df['z_swing%'] >= kbo_z_swing) & (merged_base_df['o_swing%'] < kbo_o_swing) & valid_rows,
+            (merged_base_df['z_swing%'] < kbo_z_swing) & (merged_base_df['o_swing%'] >= kbo_o_swing) & valid_rows,
+            (merged_base_df['z_swing%'] < kbo_z_swing) & (merged_base_df['o_swing%'] < kbo_o_swing) & valid_rows
+        ]
+        choicelist = ['Aggressive', 'Selective', 'Non_Selective', 'Passive']
+        merged_base_df['approach'] = np.select(condition, choicelist, default='Not Specified')
+
+    stats_output_df = merged_base_df[['game_date', 'pitname', 'pa', 'ab', 'hit', 'walk', 'strikeout','rel_speed(km)', 
+                                     'inplay_pit', 'exit_velocity', 'launch_angleX',  
+                                     'avg', 'obp', 'slg', 'ops', 'z%', 'z_swing%', 'z_con%', 'z_inplay%', 
+                                     'o%', 'o_swing%', 'o_con%', 'o_inplay%', 'f_swing%', 'swing%', 'whiff%', 
+                                     'inplay_sw', 'weak', 'topped', 'under', 'flare', 'solid_contact', 
+                                     'barrel', 'approach', 'plus_lsa4']]
+
+    percent_columns = ['inplay_pit', 'z%', 'z_swing%', 'z_con%', 'z_inplay%', 'o%', 'o_swing%', 'o_con%', 
+                      'o_inplay%', 'f_swing%', 'swing%', 'whiff%', 'inplay_sw',
+                      'weak', 'topped', 'under', 'flare', 'solid_contact', 'barrel', 'plus_lsa4']
+    for col in percent_columns:
+        stats_output_df[col] = stats_output_df[col] * 100
+                
+    round_dict = {
+        'game_date':0, 'pitname':0,'pa': 0, 'ab': 0, 'hit': 0, 'walk': 0, 'strikeout': 0, 'rel_speed(km)': 1, 'inplay_pit': 1, 
+        'exit_velocity': 1, 'launch_angleX': 1, 'hit_spin_rate': 0, 'avg': 3, 
+        'obp': 3, 'slg': 3, 'ops': 3, 'z%': 1, 'z_swing%': 1, 'z_con%': 1, 
+        'z_inplay%': 1, 'o%': 1, 'o_swing%': 1, 'o_con%': 1, 'o_inplay%': 1, 
+        'f_swing%': 1, 'swing%': 1, 'whiff%': 1, 'inplay_sw': 1, 'inplay%': 1, 
+        'weak': 1, 'topped': 1, 'under': 1, 'flare': 1, 'solid_contact': 1, 'barrel': 1,
+        'plus_lsa4': 1
+    }
+
+    round_dict_corrected = {k: v for i, (k, v) in enumerate(round_dict.items()) if k not in list(round_dict.keys())[:i]}
+    existing_columns = {col: dec for col, dec in round_dict_corrected.items() if col in stats_output_df.columns}
+    if existing_columns:
+        for col, dec in existing_columns.items():
+            try:
+                if pd.api.types.is_numeric_dtype(stats_output_df[col]):
+                    stats_output_df[col] = stats_output_df[col].round(dec)
+            except:
+                pass
+
+    for column, decimals in round_dict_corrected.items():
+        if column in stats_output_df.columns:
+            try:
+                def format_value(x):
+                    if pd.isna(x):
+                        return "-"
+                    elif decimals == 0:
+                        try:
+                            return f"{int(x)}"
+                        except:
+                            return "-"
+                    else:
+                        try:
+                            if column in percent_columns:
+                                return f"{float(x):.{decimals}f}%"
+                            else:
+                                return f"{float(x):.{decimals}f}"
+                        except:
+                            return "-"
+                stats_output_df[column] = stats_output_df[column].apply(format_value)
+            except Exception as e:
+                print(f"열 '{column}' 처리 중 오류 발생: {e}")
+                continue
+
+    return stats_output_df
