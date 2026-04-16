@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import traceback as tb
 from definition import (
     stats, season_stand, stats_viewer_pitchname, swing_viewer_pitchname,
     season_stand_pitchname, swing_viewer_stand_pitchname,
@@ -16,7 +17,6 @@ from map import (
 from user import login
 import plotly.express as px
 import plotly.graph_objects as go
-import traceback
 
 # ════════════════════════════════════════════════════════════
 # 페이지 설정
@@ -55,11 +55,9 @@ st.markdown("""
     color: #ffffff !important;
 }
 [data-testid="stSidebar"] .stButton > button {
-    background-color: #cccccc !important;
-    color: black !important;
-    width: 100%; border-radius: 7px;
-    padding: 0.5rem 1rem; height: 2rem;
-    font-size: 16px; font-weight: 500;
+    background-color: #cccccc !important; color: black !important;
+    width: 100%; border-radius: 7px; padding: 0.5rem 1rem;
+    height: 2rem; font-size: 16px; font-weight: 500;
 }
 [data-testid="stSidebar"] label,
 [data-testid="stSidebar"] .stSelectbox > div > label { color: #ababab !important; }
@@ -86,19 +84,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
-# 세션 / 헬퍼
+# 헬퍼
 # ════════════════════════════════════════════════════════════
-def get_user_id():
-    return st.session_state.get(COOKIE_TOKEN)
-
-def set_user_id(user_id):
-    st.session_state[COOKIE_TOKEN] = user_id
-
-def is_user_logged_in():
-    return st.session_state.get("loggedIn", False)
-
-def LoggedOut_Clicked():
-    st.session_state["loggedIn"] = False
+def get_user_id():      return st.session_state.get(COOKIE_TOKEN)
+def set_user_id(uid):   st.session_state[COOKIE_TOKEN] = uid
+def is_user_logged_in():return st.session_state.get("loggedIn", False)
+def LoggedOut_Clicked():st.session_state["loggedIn"] = False
 
 def LoggedIn_Clicked(userName, password):
     if login(userName, password):
@@ -118,127 +109,116 @@ def show_login_page():
             <span style='color:#c0c0c0;'>KT WIZ</span>
             <span style='color:#333333;'> PITCHING ANALYTICS</span>
         </h1>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
     _, mid1, mid2, _ = st.columns([0.5, 4, 5, 0.5])
-
     with mid1:
         st.markdown('<div class="logo-container" style="padding-top:80px;">', unsafe_allow_html=True)
         st.image("ktwiz_emblem.png", width=260)
         st.markdown("</div>", unsafe_allow_html=True)
-
     with mid2:
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         st.markdown('<div class="warning-text">※허가된 사용자 외 사용을 금함</div>', unsafe_allow_html=True)
         st.markdown('<div class="header-text">케이티 위즈</div>', unsafe_allow_html=True)
         st.markdown('<div class="subheader-text">투수 분석페이지에 오신것을 환영합니다.</div>', unsafe_allow_html=True)
         st.markdown('<hr style="margin:0;">', unsafe_allow_html=True)
-
         userName = st.text_input("아이디",   placeholder="아이디",   label_visibility="collapsed")
         password = st.text_input("비밀번호", placeholder="비밀번호", type="password", label_visibility="collapsed")
         st.session_state["password"] = password
-
         st.button("로그인", on_click=LoggedIn_Clicked, args=(userName, password))
         st.markdown("</div>", unsafe_allow_html=True)
-
         c1, c2 = st.columns([1, 3])
         with c1:
             st.checkbox("아이디 저장", key="remember_id")
         with c2:
-            st.markdown(
-                '<div class="info-text">아이디와 비밀번호를 입력하여 로그인 후 사용해 주세요.</div>',
-                unsafe_allow_html=True,
-            )
+            st.markdown('<div class="info-text">아이디와 비밀번호를 입력하여 로그인 후 사용해 주세요.</div>', unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
 # 메인 페이지
 # ════════════════════════════════════════════════════════════
 def show_main_page():
 
-    # ── 로그아웃 버튼 ────────────────────────────────────────
     st.sidebar.button("Log Out", key="logout", on_click=LoggedOut_Clicked)
-
-    # ════════════════════════════════════════════════════════
-    # STEP 1 : 리그 선택
-    # ════════════════════════════════════════════════════════
     st.sidebar.markdown("### ⚙️ 필터")
     st.sidebar.markdown("---")
 
+    # ── STEP 1 : 리그 선택 ──────────────────────────────────
     selected_league = st.sidebar.selectbox(
-        "🏆 리그 선택",
-        options=LEAGUE_OPTIONS,
-        key="selected_league",
+        "🏆 리그 선택", options=LEAGUE_OPTIONS, key="selected_league"
     )
 
-    # ════════════════════════════════════════════════════════
-    # STEP 2 : 데이터 로드
-    # ════════════════════════════════════════════════════════
-    with st.spinner(f"[{selected_league}] 데이터 로딩 중..."):
-        try:
-            league_df = load_league_data(selected_league)
-        except Exception:
-            st.error("❌ 데이터 로드 실패\n\n```\n" + traceback.format_exc() + "\n```")
-            return
+    # ── STEP 2 : 데이터 로드 ────────────────────────────────
+    # 메인 영역에 에러를 표시하기 위해 placeholder 사용
+    err_placeholder = st.empty()
+
+    league_df = None
+    with st.sidebar:
+        with st.spinner(f"[{selected_league}] 로딩 중..."):
+            try:
+                league_df = load_league_data(selected_league)
+            except Exception as e:
+                err_placeholder.error(
+                    f"### ❌ 데이터 로드 실패\n\n"
+                    f"**원인:** `{type(e).__name__}: {e}`\n\n"
+                    f"```\n{tb.format_exc()}\n```"
+                )
+                return
 
     if league_df is None or league_df.empty:
-        st.warning(f"⚠️ [{selected_league}] 데이터가 비어 있습니다.")
+        err_placeholder.warning(
+            f"⚠️ [{selected_league}] 데이터가 비어 있습니다.\n\n"
+            f"GitHub Release 파일명 또는 `min_year` 설정을 확인하세요."
+        )
         return
 
-    # 디버그: 컬럼 확인 (개발 중에만 사용, 배포 시 주석 처리)
-    # st.sidebar.caption(f"컬럼: {list(league_df.columns)[:8]}...")
-
-    # ════════════════════════════════════════════════════════
-    # STEP 3 : 팀 선택
-    # ════════════════════════════════════════════════════════
+    # ── STEP 3 : 팀 선택 ────────────────────────────────────
     try:
         team_list = get_team_list(league_df)
-    except Exception:
-        st.error("❌ 팀 목록 생성 실패\n\n```\n" + traceback.format_exc() + "\n```")
+    except Exception as e:
+        err_placeholder.error(
+            f"### ❌ 팀 목록 생성 실패\n\n"
+            f"**원인:** `{type(e).__name__}: {e}`\n\n"
+            f"```\n{tb.format_exc()}\n```"
+        )
         return
 
     if not team_list:
-        st.warning("⚠️ 팀 정보를 찾을 수 없습니다. (pitcherteam 컬럼 확인 필요)")
+        err_placeholder.warning("⚠️ 팀 정보 없음 — `pitcherteam` 컬럼을 확인하세요.")
         return
 
-    default_team_idx = next(
+    default_idx = next(
         (i for i, t in enumerate(team_list) if "KT" in str(t).upper()), 0
     )
     selected_team = st.sidebar.selectbox(
-        "🏟️ 팀 선택",
-        options=team_list,
-        index=default_team_idx,
-        key="selected_team",
+        "🏟️ 팀 선택", options=team_list, index=default_idx, key="selected_team"
     )
 
-    # ════════════════════════════════════════════════════════
-    # STEP 4 : 선수 선택
-    # ════════════════════════════════════════════════════════
+    # ── STEP 4 : 선수 선택 ──────────────────────────────────
     try:
         pitcher_options = get_pitcher_list(league_df, selected_team)
-    except Exception:
-        st.error("❌ 선수 목록 생성 실패\n\n```\n" + traceback.format_exc() + "\n```")
+    except Exception as e:
+        err_placeholder.error(
+            f"### ❌ 선수 목록 생성 실패\n\n"
+            f"**원인:** `{type(e).__name__}: {e}`\n\n"
+            f"```\n{tb.format_exc()}\n```"
+        )
         return
 
     if not pitcher_options:
-        st.warning(f"⚠️ [{selected_team}] 투수 데이터가 없습니다.")
+        err_placeholder.warning(f"⚠️ [{selected_team}] 투수 데이터 없음")
         return
 
     pitcher_labels = [p["label"] for p in pitcher_options]
     pitcher_values = [p["value"] for p in pitcher_options]
 
-    selected_pitcher_label = st.sidebar.selectbox(
-        "🧢 투수 선택",
-        options=pitcher_labels,
-        key="selected_pitcher_label",
+    selected_label = st.sidebar.selectbox(
+        "🧢 투수 선택", options=pitcher_labels, key="selected_pitcher_label"
     )
-    selected_pitcher = pitcher_values[pitcher_labels.index(selected_pitcher_label)]
+    selected_pitcher = pitcher_values[pitcher_labels.index(selected_label)]
 
     st.sidebar.markdown("---")
 
-    # ════════════════════════════════════════════════════════
-    # STEP 5 : 메뉴
-    # ════════════════════════════════════════════════════════
+    # ── STEP 5 : 메뉴 ───────────────────────────────────────
     menu_items = [
         ("📊 시즌 스탯",     "season_stats"),
         ("🎯 무브먼트 차트", "movement"),
@@ -250,22 +230,26 @@ def show_main_page():
     if "current_menu" not in st.session_state:
         st.session_state.current_menu = "season_stats"
 
-    for label, key in menu_items:
-        if st.sidebar.button(label, key=f"menu_{key}"):
+    for lbl, key in menu_items:
+        if st.sidebar.button(lbl, key=f"menu_{key}"):
             st.session_state.current_menu = key
 
-    # ════════════════════════════════════════════════════════
-    # STEP 6 : 선수 데이터 필터링
-    # ════════════════════════════════════════════════════════
+    # ── STEP 6 : 선수 데이터 필터링 ─────────────────────────
     try:
         player_df = get_player_df(league_df, selected_pitcher)
-    except Exception:
-        st.error("❌ 선수 데이터 필터링 실패\n\n```\n" + traceback.format_exc() + "\n```")
+    except Exception as e:
+        err_placeholder.error(
+            f"### ❌ 선수 데이터 필터링 실패\n\n"
+            f"**원인:** `{type(e).__name__}: {e}`\n\n"
+            f"```\n{tb.format_exc()}\n```"
+        )
         return
 
     if player_df is None or player_df.empty:
-        st.warning(f"⚠️ '{selected_pitcher}' 의 데이터가 없습니다.")
+        err_placeholder.warning(f"⚠️ '{selected_pitcher}' 데이터 없음")
         return
+
+    err_placeholder.empty()   # 에러 없으면 placeholder 비움
 
     # ── 헤더 ────────────────────────────────────────────────
     st.markdown(f"""
@@ -276,97 +260,74 @@ def show_main_page():
             <span style='color:#c0c0c0; font-size:18px;'> · {selected_pitcher}</span>
         </h1>
         <div class="subheader-text">{selected_league} · {selected_team}</div>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
     menu = st.session_state.current_menu
 
     # ════════════════════════════════════════════════════════
     # 메뉴별 콘텐츠
     # ════════════════════════════════════════════════════════
-
-    # ── 📊 시즌 스탯 ─────────────────────────────────────────
     if menu == "season_stats":
         st.subheader("📊 시즌 스탯")
-        col1, col2 = st.columns(2)
-        with col1:
+        c1, c2 = st.columns(2)
+        with c1:
             st.markdown("**전체**")
             try:
                 st.dataframe(stats(player_df), use_container_width=True)
             except Exception:
-                st.error("스탯 오류\n```\n" + traceback.format_exc() + "\n```")
-        with col2:
+                st.error("스탯 오류\n```\n" + tb.format_exc() + "\n```")
+        with c2:
             st.markdown("**좌/우 타자별**")
             try:
                 st.dataframe(season_stand(player_df), use_container_width=True)
             except Exception:
-                st.error("스탯 오류\n```\n" + traceback.format_exc() + "\n```")
+                st.error("스탯 오류\n```\n" + tb.format_exc() + "\n```")
         st.markdown("**구종별**")
         try:
             st.dataframe(season_pitchname(player_df), use_container_width=True)
         except Exception:
-            st.error("구종별 스탯 오류\n```\n" + traceback.format_exc() + "\n```")
+            st.error("구종별 스탯 오류\n```\n" + tb.format_exc() + "\n```")
 
-    # ── 🎯 무브먼트 차트 ──────────────────────────────────────
     elif menu == "movement":
         st.subheader("🎯 무브먼트 차트")
         try:
-            mv_df = movement_dataframe(player_df)
-            fig   = season_movement_chart(mv_df)
+            fig = season_movement_chart(movement_dataframe(player_df))
             st.plotly_chart(fig, use_container_width=True)
         except Exception:
-            st.error("무브먼트 오류\n```\n" + traceback.format_exc() + "\n```")
+            st.error("무브먼트 오류\n```\n" + tb.format_exc() + "\n```")
 
-    # ── 📍 로케이션 ───────────────────────────────────────────
     elif menu == "location":
         st.subheader("📍 로케이션")
-        tab_r, tab_l = st.tabs(["vs 우타 (R)", "vs 좌타 (L)"])
-        with tab_r:
-            try:
-                st.plotly_chart(season_location_fig(player_df, "R"), use_container_width=True)
-            except Exception:
-                st.error("로케이션 오류\n```\n" + traceback.format_exc() + "\n```")
-        with tab_l:
-            try:
-                st.plotly_chart(season_location_fig(player_df, "L"), use_container_width=True)
-            except Exception:
-                st.error("로케이션 오류\n```\n" + traceback.format_exc() + "\n```")
+        t1, t2 = st.tabs(["vs 우타 (R)", "vs 좌타 (L)"])
+        with t1:
+            try:   st.plotly_chart(season_location_fig(player_df, "R"), use_container_width=True)
+            except Exception: st.error(tb.format_exc())
+        with t2:
+            try:   st.plotly_chart(season_location_fig(player_df, "L"), use_container_width=True)
+            except Exception: st.error(tb.format_exc())
 
-    # ── 🔄 구종 비율 ──────────────────────────────────────────
     elif menu == "pitch_ratio":
         st.subheader("🔄 구종 비율")
-        try:
-            st.plotly_chart(season_pitched_fig(player_df), use_container_width=True)
-        except Exception:
-            st.error("구종 비율 오류\n```\n" + traceback.format_exc() + "\n```")
+        try:   st.plotly_chart(season_pitched_fig(player_df), use_container_width=True)
+        except Exception: st.error(tb.format_exc())
 
-    # ── 📈 스윙 분석 ──────────────────────────────────────────
     elif menu == "swing":
         st.subheader("📈 스윙 분석")
-        tab_all, tab_r, tab_l = st.tabs(["전체", "vs 우타 (R)", "vs 좌타 (L)"])
-        with tab_all:
-            try:
-                st.plotly_chart(create_pitcher_swing_map(player_df), use_container_width=True)
-            except Exception:
-                st.error("스윙 맵 오류\n```\n" + traceback.format_exc() + "\n```")
-        with tab_r:
-            try:
-                st.plotly_chart(create_pitcher_swing_map_stand(player_df, "R"), use_container_width=True)
-            except Exception:
-                st.error("스윙 맵 오류\n```\n" + traceback.format_exc() + "\n```")
-        with tab_l:
-            try:
-                st.plotly_chart(create_pitcher_swing_map_stand(player_df, "L"), use_container_width=True)
-            except Exception:
-                st.error("스윙 맵 오류\n```\n" + traceback.format_exc() + "\n```")
+        t1, t2, t3 = st.tabs(["전체", "vs 우타 (R)", "vs 좌타 (L)"])
+        with t1:
+            try:   st.plotly_chart(create_pitcher_swing_map(player_df), use_container_width=True)
+            except Exception: st.error(tb.format_exc())
+        with t2:
+            try:   st.plotly_chart(create_pitcher_swing_map_stand(player_df, "R"), use_container_width=True)
+            except Exception: st.error(tb.format_exc())
+        with t3:
+            try:   st.plotly_chart(create_pitcher_swing_map_stand(player_df, "L"), use_container_width=True)
+            except Exception: st.error(tb.format_exc())
 
-    # ── 🎥 투구 트래킹 ────────────────────────────────────────
     elif menu == "pitch_track":
         st.subheader("🎥 투구 트래킹")
-        try:
-            st.plotly_chart(season_pitchtrack_chart(player_df), use_container_width=True)
-        except Exception:
-            st.error("투구 트래킹 오류\n```\n" + traceback.format_exc() + "\n```")
+        try:   st.plotly_chart(season_pitchtrack_chart(player_df), use_container_width=True)
+        except Exception: st.error(tb.format_exc())
 
 # ════════════════════════════════════════════════════════════
 # 진입점
