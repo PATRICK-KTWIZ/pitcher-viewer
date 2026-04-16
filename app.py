@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from definition import select_league, stats, season_stand, stats_viewer_pitchname, swing_viewer_pitchname, season_stand_pitchname, swing_viewer_stand_pitchname, stats_viewer_stand_pitchname 
+from definition import select_league, stats, season_stand, stats_viewer_pitchname, swing_viewer_pitchname, season_stand_pitchname, swing_viewer_stand_pitchname, stats_viewer_stand_pitchname
 from definition import season_pitchname, stats_viewer, swing_viewer, stats_viewer_stand, swing_viewer_stand, movement_dataframe
 from map import season_movement_chart, season_pitchtrack_chart, season_pitched_fig, season_location_fig, create_pitcher_swing_map, create_pitcher_swing_map_stand, pitch_by_pitch_map
 from dataframe import load_league_data
@@ -12,11 +12,12 @@ from streamlit.components.v1 import html
 import plotly.io as pio
 
 # ── 리그 레이블 매핑 ──────────────────────────────────────────────────────────
+# app.py 표시명 → dataframe.py 의 LEAGUE_FILES 키와 일치시킴
 LEAGUE_LABELS = {
     "KBO":   "KBO",
     "NPB":   "NPB",
     "AAA":   "AAA",
-    "Minor": "KBO_Minor",
+    "Minor": "Minor",   # ★ BUG FIX: 기존 "KBO_Minor" → "Minor" (dataframe.py 키와 일치)
 }
 
 COOKIE_TOKEN = "my_unique_cookie_token"
@@ -87,6 +88,11 @@ headerSection = st.container()
 mainSection   = st.container()
 loginSection  = st.container()
 logOutSection = st.container()
+
+# ── 캐시된 데이터 로드 (루프 밖에 정의) ★ BUG FIX ─────────────────────────
+@st.cache_data(show_spinner="📦 데이터 로드 중...")
+def _load_cached(league_key: str) -> pd.DataFrame:
+    return load_league_data(league_key)
 
 # ── 유틸 함수 ─────────────────────────────────────────────────────────────────
 def get_user_id():
@@ -217,25 +223,21 @@ def show_main_page():
 
         # 리그 변경 시 선수 목록 초기화
         if st.session_state.get("_prev_league") != select_league_label:
-            st.session_state["_prev_league"]    = select_league_label
+            st.session_state["_prev_league"]     = select_league_label
             st.session_state["selected_players"] = []
+            st.session_state["filter_team"]      = "-"
+            st.session_state["filter_pitcher"]   = "-"
 
-        # 데이터 로드 (캐시 활용)
+        # 데이터 로드 (캐시 활용) ★ BUG FIX: 루프 밖 전역 함수 사용
         league_key = LEAGUE_LABELS[select_league_label]
+        league_df  = _load_cached(league_key)
 
-        @st.cache_data(show_spinner=f"📦 {select_league_label} 데이터 로드 중...")
-        def _load(lk):
-            return load_league_data(lk)
-
-        league_df = _load(league_key)
-
-        if league_df.empty:
+        if league_df is None or league_df.empty:
             st.error(f"{select_league_label} 데이터를 불러오지 못했습니다.")
             return
 
         # ── ② 팀 & 선수 선택 (순서 무관, 양방향 필터) ───────────────────────
-        # 전체 팀 목록
-        all_teams   = sorted(league_df["pitcherteam"].dropna().unique().tolist())
+        all_teams    = sorted(league_df["pitcherteam"].dropna().unique().tolist())
         all_pitchers = sorted(league_df["pitcher"].dropna().unique().tolist())
 
         # session_state 초기화
@@ -243,7 +245,6 @@ def show_main_page():
         if "filter_pitcher" not in st.session_state: st.session_state["filter_pitcher"] = "-"
 
         # ── 팀 선택 ──
-        # 현재 선택된 선수가 있으면 해당 선수가 속한 팀만 후보로 제공
         if st.session_state["filter_pitcher"] != "-":
             pitcher_teams = sorted(
                 league_df[league_df["pitcher"] == st.session_state["filter_pitcher"]]["pitcherteam"]
@@ -263,7 +264,6 @@ def show_main_page():
         st.session_state["filter_team"] = select_team
 
         # ── 선수 선택 ──
-        # 현재 선택된 팀이 있으면 해당 팀 소속 선수만 후보로 제공
         if st.session_state["filter_team"] != "-":
             team_pitchers = sorted(
                 league_df[league_df["pitcherteam"] == st.session_state["filter_team"]]["pitcher"]
@@ -282,7 +282,6 @@ def show_main_page():
         )
         st.session_state["filter_pitcher"] = select_pitcher
 
-        # 팀/선수 선택 안내
         if select_team == "-" and select_pitcher == "-":
             st.sidebar.caption("💡 팀 또는 선수를 먼저 선택하면 상대 목록이 자동으로 좁혀집니다.")
 
@@ -296,23 +295,27 @@ def show_main_page():
                 if select_pitcher == "-":
                     st.sidebar.warning("선수를 선택해 주세요.")
                 else:
-                    team_val = select_team if select_team != "-" else (
-                        league_df[league_df["pitcher"] == select_pitcher]["pitcherteam"]
-                        .dropna().iloc[0] if not league_df[league_df["pitcher"] == select_pitcher].empty else "Unknown"
-                    )
+                    if select_team != "-":
+                        team_val = select_team
+                    else:
+                        mask = league_df["pitcher"] == select_pitcher
+                        team_val = (
+                            league_df[mask]["pitcherteam"].dropna().iloc[0]
+                            if not league_df[mask].empty else "Unknown"
+                        )
                     entry = {
                         "Team"       : team_val,
                         "Player Name": select_pitcher,
                         "League"     : select_league_label,
                     }
-                    # 중복 방지
                     if entry not in st.session_state.selected_players:
                         st.session_state.selected_players.append(entry)
+
         with col2:
             if st.button("새로고침", key="refresh_btn"):
-                st.session_state.selected_players       = []
-                st.session_state["filter_team"]    = "-"
-                st.session_state["filter_pitcher"] = "-"
+                st.session_state.selected_players     = []
+                st.session_state["filter_team"]       = "-"
+                st.session_state["filter_pitcher"]    = "-"
                 st.rerun()
 
         # 선택된 선수 목록 표시
@@ -328,16 +331,16 @@ def show_main_page():
                 st.warning("선수를 추가한 후 실행해 주세요.")
                 return
 
-            # 선택된 선수들의 데이터 합치기
+            # ★ BUG FIX: 루프 밖에 정의된 _load_cached 사용, 인자 올바르게 전달
             concatenated_df = pd.DataFrame()
             for player_info in st.session_state.selected_players:
-                lk  = LEAGUE_LABELS[player_info["League"]]
-                @st.cache_data
-                def _load_cached(lk):
-                    return load_league_data(lk)
-                df_tmp = _load_cached()
-                player_df = df_tmp[df_tmp["pitcher"] == player_info["Player Name"]]
-                concatenated_df = pd.concat([concatenated_df, player_df])
+                lk     = LEAGUE_LABELS[player_info["League"]]
+                df_tmp = _load_cached(lk)
+                if df_tmp is None or df_tmp.empty:
+                    st.warning(f"{player_info['Player Name']} - 데이터 로드 실패, 건너뜁니다.")
+                    continue
+                player_df       = df_tmp[df_tmp["pitcher"] == player_info["Player Name"]]
+                concatenated_df = pd.concat([concatenated_df, player_df], ignore_index=True)
 
             if concatenated_df.empty:
                 st.warning("선택된 선수의 데이터가 없습니다.")
@@ -348,17 +351,7 @@ def show_main_page():
                 for pitcher, group in concatenated_df.groupby("pitcher")
             }
 
-            # selected_player_df: 선수명 → 팀 매핑용 (기존 코드 호환)
-            selected_player_df = (
-                concatenated_df[["pitcher", "pitcherteam"]]
-                .drop_duplicates()
-                .rename(columns={"pitcher": "NAME", "pitcherteam": "TEAM"})
-            )
-
-            # ── 이하 기존 시각화 코드 (pitcher / pitcher_name 참조 방식만 수정) ──
-
             def get_pitcher_name(pitcher):
-                """pitcher 컬럼값 그대로 이름으로 사용"""
                 return str(pitcher)
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -652,7 +645,7 @@ def show_main_page():
             st.divider()
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 무브먼트 차트 ~ 이하 기존 시각화 코드 (pitcher_name 참조만 변경)
+# 무브먼트 차트
 # ─────────────────────────────────────────────────────────────────────────────
             st.title('[시즌 :red[무브먼트 차트] 현황]')
 
@@ -723,20 +716,20 @@ def show_main_page():
                 </div>""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 로케이션 / 구종별 로케이션 / 스윙맵 / 투구표 — 기존 로직 동일, pitcher_name만 교체
+# 로케이션 / 구종별 로케이션 / 스윙맵 / 투구표
 # ─────────────────────────────────────────────────────────────────────────────
             DESIRED_PITCH_ORDER = ['4-Seam Fastball','2-Seam Fastball','Cutter','Slider','Sweeper','Curveball','Changeup','Split-Finger']
 
             def _render_location_html(df_year, pitcher, year, height=650):
-                available = df_year["pitch_name"].unique().tolist()
-                ordered   = [p for p in DESIRED_PITCH_ORDER if p in available]
+                available  = df_year["pitch_name"].unique().tolist()
+                ordered    = [p for p in DESIRED_PITCH_ORDER if p in available]
                 pitch_figs = {p: season_location_fig(df_year[df_year["pitch_name"] == p], p) for p in ordered}
                 total_w    = len(ordered) * 300
                 html_parts = []
                 for pname, fig in pitch_figs.items():
                     fh = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
                     html_parts.append(f'<div style="display:inline-block;width:270px;height:600px;margin-right:0px;"><div style="text-align:center;font-weight:bold;margin-bottom:5px;">{pname}</div>{fh}</div>')
-                label = '<div style="display:inline-block;width:50px;height:900px;vertical-align:top;padding-top:200px;"><div style="transform:rotate(-90deg);transform-origin:center;font-weight:bold;margin-bottom:80px;">우타자</div><div style="transform:rotate(-90deg);transform-origin:center;font-weight:bold;margin-top:230px;">좌타자</div></div>'
+                label    = '<div style="display:inline-block;width:50px;height:900px;vertical-align:top;padding-top:200px;"><div style="transform:rotate(-90deg);transform-origin:center;font-weight:bold;margin-bottom:80px;">우타자</div><div style="transform:rotate(-90deg);transform-origin:center;font-weight:bold;margin-top:230px;">좌타자</div></div>'
                 complete = f'<div style="width:100%;height:750px;border:none;border-radius:5px;padding:10px;margin-bottom:20px;background-color:white;"><div style="width:100%;height:100%;overflow-x:scroll;overflow-y:hidden;-webkit-overflow-scrolling:touch;"><div style="width:{total_w+50}px;height:800px;">{label}{"".join(html_parts)}</div></div></div>'
                 html(complete, height=height)
 
@@ -841,6 +834,7 @@ def show_main_page():
                     st.error(f"{pitcher_name}의 데이터에 game_date 컬럼이 없습니다.")
                     continue
 
+                pitcher_df = pitcher_df.copy()
                 pitcher_df["game_date"] = pd.to_datetime(pitcher_df["game_date"], errors="coerce")
                 recent_dates = sorted(pitcher_df["game_date"].dropna().unique(), reverse=True)[:5]
 
@@ -860,15 +854,13 @@ def show_main_page():
                         complete     = f'<div style="width:100%;height:600px;border:none;border-radius:5px;padding:10px;margin-bottom:20px;background-color:white;"><div style="width:100%;height:100%;overflow-x:scroll;overflow-y:hidden;-webkit-overflow-scrolling:touch;"><div style="width:{total_w}px;height:550px;">{fig_html}</div><div style="text-align:center;margin-top:5px;color:#555;font-size:0.8em;">← 좌우로 스크롤하여 더 보기 →</div></div></div>'
                         html(complete, height=520)
 
-                # 최신 경기
-                latest_df  = pitcher_df[pitcher_df["game_date"] == recent_dates[0]]
-                opponent   = latest_df["batterteam"].iloc[0] if "batterteam" in latest_df.columns else "상대팀 정보 없음"
-                date_str   = str(recent_dates[0]).split("T")[0]
+                latest_df = pitcher_df[pitcher_df["game_date"] == recent_dates[0]]
+                opponent  = latest_df["batterteam"].iloc[0] if "batterteam" in latest_df.columns else "상대팀 정보 없음"
+                date_str  = str(recent_dates[0]).split("T")[0]
                 st.write(f"### 최신 경기 (날짜: {date_str})")
                 st.write(f"상대팀: {opponent}")
                 _render_pbp(latest_df, f"{pitcher}_latest")
 
-                # 이전 경기
                 for gd in recent_dates[1:]:
                     gdf      = pitcher_df[pitcher_df["game_date"] == gd]
                     opp      = gdf["batterteam"].iloc[0] if "batterteam" in gdf.columns else "상대팀 정보 없음"
@@ -881,16 +873,6 @@ def show_main_page():
 # ─────────────────────────────────────────────────────────────────────────────
 # 엔트리포인트
 # ─────────────────────────────────────────────────────────────────────────────
-# with headerSection:
-#     user_id = get_user_id()
-#     if user_id is None:
-#         st.session_state['loggedIn'] = False
-#         show_login_page()
-#     else:
-#         st.session_state['loggedIn'] = True
-#         show_main_page()
-
-# 수정된 코드
 with headerSection:
     if is_user_logged_in():
         show_logout_page()
