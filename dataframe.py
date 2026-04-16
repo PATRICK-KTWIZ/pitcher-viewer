@@ -1,8 +1,7 @@
 import os
 import pandas as pd
-import numpy as np
-from io import BytesIO
 import requests
+from io import BytesIO
 import streamlit as st
 
 # ════════════════════════════════════════════════════════════
@@ -30,61 +29,84 @@ MIN_YEAR  = 2023
 # 2. 데이터 로드
 # ════════════════════════════════════════════════════════════
 
-def load_league_data(league_name: str, min_year: int = MIN_YEAR) -> pd.DataFrame:
+@st.cache_data(show_spinner="리그 데이터를 불러오는 중입니다...", ttl=3600) # 1시간 동안 메모리 유지
+
+def load_league_data(league_name: str, min_year: int = 2023) -> pd.DataFrame:
+    """
+    지정한 리그 데이터를 GitHub Release에서 가져오거나 로컬 캐시에서 로드합니다.
+    """
     if league_name not in LEAGUE_FILES:
-        st.error(f"[{league_name}] 정의되지 않은 리그입니다. 사용 가능: {list(LEAGUE_FILES.keys())}")
+        st.error(f"[{league_name}] 정의되지 않은 리그입니다.")
         return pd.DataFrame()
 
-    file_name  = LEAGUE_FILES[league_name]
+    file_name = LEAGUE_FILES[league_name]
+    # CACHE_DIR가 없으면 현재 디렉토리에 생성 (권한 문제 방지)
+    if not os.path.exists(CACHE_DIR):
+        try:
+            os.makedirs(CACHE_DIR)
+        except:
+            pass 
+    
     cache_path = os.path.join(CACHE_DIR, file_name)
 
-    # 로컬 캐시 우선
+    # 1. 로컬 파일 캐시 확인
     if os.path.exists(cache_path):
         try:
             df_tmp = pd.read_parquet(cache_path)
-            return df_tmp[df_tmp["game_year"] >= min_year] if min_year else df_tmp
+            # 데이터 타입 최적화 (메모리 사용량 감소)
+            df_tmp = _optimize_dataframe(df_tmp)
+            return df_tmp[df_tmp["game_year"] >= min_year] if "game_year" in df_tmp.columns else df_tmp
         except Exception as e:
-            st.warning(f"캐시 읽기 실패 ({file_name}), 재다운로드합니다: {e}")
-            os.remove(cache_path)
+            st.warning(f"캐시 읽기 실패, 재다운로드 시도: {e}")
+            if os.path.exists(cache_path): os.remove(cache_path)
 
-    # GitHub Release 다운로드
+    # 2. GitHub API 호출 (네트워크 최적화)
     release_url = f"https://api.github.com/repos/{OWNER}/{REPO}/releases/tags/{TAG_NAME}"
-    headers     = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
+    headers = {"Authorization": f"token {GITHUB_TOKEN}"} if GITHUB_TOKEN else {}
 
     try:
-        response = requests.get(release_url, headers=headers, timeout=30)
-    except requests.RequestException as e:
-        st.error(f"GitHub API 접근 실패: {e}")
-        return pd.DataFrame()
-
-    if response.status_code != 200:
-        st.error(f"Release 접근 실패 (HTTP {response.status_code})")
-        return pd.DataFrame()
-
-    assets       = response.json().get("assets", [])
-    target_asset = next((a for a in assets if a["name"] == file_name), None)
-    if not target_asset:
-        st.error(f"{file_name} 파일을 Release에서 찾을 수 없습니다.")
-        return pd.DataFrame()
-
-    try:
-        with requests.Session() as session:
-            session.headers.update({
-                "Accept"       : "application/octet-stream",
-                "Authorization": f"token {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
-            })
-            res = session.get(target_asset["url"], timeout=120)
-        if res.status_code != 200:
-            st.error(f"파일 다운로드 실패 (HTTP {res.status_code})")
+        response = requests.get(release_url, headers=headers, timeout=15)
+        response.raise_for_status()
+        assets = response.json().get("assets", [])
+        target_asset = next((a for a in assets if a["name"] == file_name), None)
+        
+        if not target_asset:
+            st.error(f"{file_name} 파일을 찾을 수 없습니다.")
             return pd.DataFrame()
 
+        # 파일 다운로드 (Session 유지로 성능 향상)
+        with requests.Session() as session:
+            session.headers.update({
+                "Accept": "application/octet-stream",
+                "Authorization": f"token {GITHUB_TOKEN}" if GITHUB_TOKEN else "",
+            })
+            res = session.get(target_asset["url"], timeout=60)
+            res.raise_for_status()
+
+        # 3. 데이터프레임 처리 및 로컬 저장
         df_tmp = pd.read_parquet(BytesIO(res.content))
         df_tmp.to_parquet(cache_path, index=False)
-        return df_tmp[df_tmp["game_year"] >= min_year] if min_year else df_tmp
+        
+        df_tmp = _optimize_dataframe(df_tmp)
+        return df_tmp[df_tmp["game_year"] >= min_year] if "game_year" in df_tmp.columns else df_tmp
 
     except Exception as e:
-        st.error(f"파일 파싱/저장 실패: {e}")
+        st.error(f"데이터 로딩 중 치명적 오류 발생: {e}")
         return pd.DataFrame()
+
+def _optimize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
+    """데이터프레임 메모리 최적화 및 날짜 형식 정리"""
+    # 숫자형 데이터 타입 다운캐스팅
+    for col in df.select_dtypes(include=['float64']).columns:
+        df[col] = df[col].astype('float32')
+    for col in df.select_dtypes(include=['int64']).columns:
+        df[col] = df[col].astype('int32')
+    
+    # game_date가 문자열인 경우 datetime으로 변환
+    if 'game_date' in df.columns:
+        df['game_date'] = pd.to_datetime(df['game_date']).dt.date
+        
+    return df
 
 
 # ════════════════════════════════════════════════════════════
