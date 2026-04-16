@@ -2,11 +2,12 @@ import streamlit as st
 import pandas as pd
 import traceback as tb
 from definition import (
-    stats, season_stand, stats_viewer_pitchname, swing_viewer_pitchname,
+    stats, season_stand, season_pitchname,
+    stats_viewer_pitchname, swing_viewer_pitchname,
     season_stand_pitchname, swing_viewer_stand_pitchname,
-    stats_viewer_stand_pitchname, season_pitchname,
-    stats_viewer, swing_viewer, stats_viewer_stand,
-    swing_viewer_stand, movement_dataframe, LEAGUE_OPTIONS,
+    stats_viewer_stand_pitchname, stats_viewer, swing_viewer,
+    stats_viewer_stand, swing_viewer_stand, movement_dataframe,
+    LEAGUE_OPTIONS,
 )
 from dataframe import load_league_data, get_team_list, get_pitcher_list, get_player_df
 from map import (
@@ -15,7 +16,6 @@ from map import (
     create_pitcher_swing_map_stand, pitch_by_pitch_map,
 )
 from user import login
-import plotly.express as px
 import plotly.graph_objects as go
 
 # ════════════════════════════════════════════════════════════
@@ -25,8 +25,13 @@ st.set_page_config(layout="wide", page_title="KT WIZ PITCHING ANALYTICS")
 
 COOKIE_TOKEN = "my_unique_cookie_token"
 
+# ════════════════════════════════════════════════════════════
+# 세션 상태 초기화 ── 앱 최초 실행 시 1회만
+# ════════════════════════════════════════════════════════════
 if "loggedIn" not in st.session_state:
-    st.session_state.loggedIn = False
+    st.session_state["loggedIn"] = False
+if "current_menu" not in st.session_state:
+    st.session_state["current_menu"] = "season_stats"
 
 # ════════════════════════════════════════════════════════════
 # CSS
@@ -36,13 +41,11 @@ st.markdown("""
 @media (max-width: 1024px) {
     .header-text    { font-size: 24px !important; }
     .subheader-text { font-size: 15px !important; }
-    [data-testid="stSidebar"] { min-width: 220px !important; max-width: 240px !important; }
     .block-container { padding: 0.5rem 1rem !important; }
 }
 @media (max-width: 767px) {
     .header-text    { font-size: 18px !important; }
     .subheader-text { font-size: 13px !important; }
-    [data-testid="stSidebar"] { min-width: 100% !important; max-width: 100% !important; }
     .block-container { padding: 0.3rem 0.5rem !important; }
     .js-plotly-plot  { width: 100% !important; }
 }
@@ -84,20 +87,26 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
-# 헬퍼
+# 헬퍼 함수
 # ════════════════════════════════════════════════════════════
-def get_user_id():      return st.session_state.get(COOKIE_TOKEN)
-def set_user_id(uid):   st.session_state[COOKIE_TOKEN] = uid
-def is_user_logged_in():return st.session_state.get("loggedIn", False)
-def LoggedOut_Clicked():st.session_state["loggedIn"] = False
+def is_logged_in() -> bool:
+    return st.session_state.get("loggedIn", False) is True
 
-def LoggedIn_Clicked(userName, password):
+def do_login(userName: str, password: str):
+    """폼 제출 시 즉시 호출 — on_click 콜백 방식 대신 폼 방식 사용"""
+    if not userName or not password:
+        st.session_state["login_error"] = "아이디와 비밀번호를 입력해 주세요."
+        return
     if login(userName, password):
-        set_user_id(userName)
         st.session_state["loggedIn"] = True
+        st.session_state["login_error"] = ""
     else:
         st.session_state["loggedIn"] = False
-        st.error("유효하지 않은 ID 또는 패스워드 입니다.")
+        st.session_state["login_error"] = "유효하지 않은 ID 또는 패스워드 입니다."
+
+def do_logout():
+    st.session_state["loggedIn"] = False
+    st.session_state["current_menu"] = "season_stats"
 
 # ════════════════════════════════════════════════════════════
 # 로그인 페이지
@@ -112,33 +121,53 @@ def show_login_page():
     </div>""", unsafe_allow_html=True)
 
     _, mid1, mid2, _ = st.columns([0.5, 4, 5, 0.5])
+
     with mid1:
         st.markdown('<div class="logo-container" style="padding-top:80px;">', unsafe_allow_html=True)
         st.image("ktwiz_emblem.png", width=260)
         st.markdown("</div>", unsafe_allow_html=True)
+
     with mid2:
         st.markdown('<div class="login-container">', unsafe_allow_html=True)
         st.markdown('<div class="warning-text">※허가된 사용자 외 사용을 금함</div>', unsafe_allow_html=True)
         st.markdown('<div class="header-text">케이티 위즈</div>', unsafe_allow_html=True)
         st.markdown('<div class="subheader-text">투수 분석페이지에 오신것을 환영합니다.</div>', unsafe_allow_html=True)
         st.markdown('<hr style="margin:0;">', unsafe_allow_html=True)
-        userName = st.text_input("아이디",   placeholder="아이디",   label_visibility="collapsed")
-        password = st.text_input("비밀번호", placeholder="비밀번호", type="password", label_visibility="collapsed")
-        st.session_state["password"] = password
-        st.button("로그인", on_click=LoggedIn_Clicked, args=(userName, password))
+
+        # ✅ st.form 사용 → 제출 시 즉시 세션 반영 후 rerun
+        with st.form(key="login_form", clear_on_submit=False):
+            userName = st.text_input("아이디",   placeholder="아이디",   label_visibility="collapsed")
+            password = st.text_input("비밀번호", placeholder="비밀번호", type="password", label_visibility="collapsed")
+            submitted = st.form_submit_button("로그인")
+
+        if submitted:
+            do_login(userName, password)
+            st.rerun()   # ← 로그인 성공/실패 즉시 화면 갱신
+
+        if st.session_state.get("login_error"):
+            st.error(st.session_state["login_error"])
+
         st.markdown("</div>", unsafe_allow_html=True)
+
         c1, c2 = st.columns([1, 3])
         with c1:
             st.checkbox("아이디 저장", key="remember_id")
         with c2:
-            st.markdown('<div class="info-text">아이디와 비밀번호를 입력하여 로그인 후 사용해 주세요.</div>', unsafe_allow_html=True)
+            st.markdown(
+                '<div class="info-text">아이디와 비밀번호를 입력하여 로그인 후 사용해 주세요.</div>',
+                unsafe_allow_html=True,
+            )
 
 # ════════════════════════════════════════════════════════════
 # 메인 페이지
 # ════════════════════════════════════════════════════════════
 def show_main_page():
 
-    st.sidebar.button("Log Out", key="logout", on_click=LoggedOut_Clicked)
+    # ── 로그아웃 ─────────────────────────────────────────────
+    if st.sidebar.button("Log Out", key="logout"):
+        do_logout()
+        st.rerun()
+
     st.sidebar.markdown("### ⚙️ 필터")
     st.sidebar.markdown("---")
 
@@ -148,42 +177,40 @@ def show_main_page():
     )
 
     # ── STEP 2 : 데이터 로드 ────────────────────────────────
-    # 메인 영역에 에러를 표시하기 위해 placeholder 사용
-    err_placeholder = st.empty()
+    err_area = st.empty()   # 메인 영역 에러 표시용
 
     league_df = None
-    with st.sidebar:
-        with st.spinner(f"[{selected_league}] 로딩 중..."):
-            try:
-                league_df = load_league_data(selected_league)
-            except Exception as e:
-                err_placeholder.error(
-                    f"### ❌ 데이터 로드 실패\n\n"
-                    f"**원인:** `{type(e).__name__}: {e}`\n\n"
-                    f"```\n{tb.format_exc()}\n```"
-                )
-                return
+    load_status = st.sidebar.empty()
+    load_status.info(f"⏳ {selected_league} 로딩 중...")
+    try:
+        league_df = load_league_data(selected_league)
+        load_status.empty()
+    except Exception as e:
+        load_status.empty()
+        err_area.error(
+            f"### ❌ 데이터 로드 실패\n\n"
+            f"**`{type(e).__name__}`**: {e}\n\n"
+            f"```\n{tb.format_exc()}\n```"
+        )
+        return
 
     if league_df is None or league_df.empty:
-        err_placeholder.warning(
-            f"⚠️ [{selected_league}] 데이터가 비어 있습니다.\n\n"
-            f"GitHub Release 파일명 또는 `min_year` 설정을 확인하세요."
-        )
+        err_area.warning(f"⚠️ [{selected_league}] 데이터가 비어 있습니다.")
         return
 
     # ── STEP 3 : 팀 선택 ────────────────────────────────────
     try:
         team_list = get_team_list(league_df)
     except Exception as e:
-        err_placeholder.error(
+        err_area.error(
             f"### ❌ 팀 목록 생성 실패\n\n"
-            f"**원인:** `{type(e).__name__}: {e}`\n\n"
+            f"**`{type(e).__name__}`**: {e}\n\n"
             f"```\n{tb.format_exc()}\n```"
         )
         return
 
     if not team_list:
-        err_placeholder.warning("⚠️ 팀 정보 없음 — `pitcherteam` 컬럼을 확인하세요.")
+        err_area.warning("⚠️ 팀 정보 없음 — `pitcherteam` 컬럼을 확인하세요.")
         return
 
     default_idx = next(
@@ -197,15 +224,15 @@ def show_main_page():
     try:
         pitcher_options = get_pitcher_list(league_df, selected_team)
     except Exception as e:
-        err_placeholder.error(
+        err_area.error(
             f"### ❌ 선수 목록 생성 실패\n\n"
-            f"**원인:** `{type(e).__name__}: {e}`\n\n"
+            f"**`{type(e).__name__}`**: {e}\n\n"
             f"```\n{tb.format_exc()}\n```"
         )
         return
 
     if not pitcher_options:
-        err_placeholder.warning(f"⚠️ [{selected_team}] 투수 데이터 없음")
+        err_area.warning(f"⚠️ [{selected_team}] 투수 데이터 없음")
         return
 
     pitcher_labels = [p["label"] for p in pitcher_options]
@@ -218,7 +245,7 @@ def show_main_page():
 
     st.sidebar.markdown("---")
 
-    # ── STEP 5 : 메뉴 ───────────────────────────────────────
+    # ── STEP 5 : 메뉴 버튼 ──────────────────────────────────
     menu_items = [
         ("📊 시즌 스탯",     "season_stats"),
         ("🎯 무브먼트 차트", "movement"),
@@ -227,29 +254,27 @@ def show_main_page():
         ("📈 스윙 분석",     "swing"),
         ("🎥 투구 트래킹",   "pitch_track"),
     ]
-    if "current_menu" not in st.session_state:
-        st.session_state.current_menu = "season_stats"
-
     for lbl, key in menu_items:
         if st.sidebar.button(lbl, key=f"menu_{key}"):
-            st.session_state.current_menu = key
+            st.session_state["current_menu"] = key
+            st.rerun()
 
     # ── STEP 6 : 선수 데이터 필터링 ─────────────────────────
     try:
         player_df = get_player_df(league_df, selected_pitcher)
     except Exception as e:
-        err_placeholder.error(
+        err_area.error(
             f"### ❌ 선수 데이터 필터링 실패\n\n"
-            f"**원인:** `{type(e).__name__}: {e}`\n\n"
+            f"**`{type(e).__name__}`**: {e}\n\n"
             f"```\n{tb.format_exc()}\n```"
         )
         return
 
     if player_df is None or player_df.empty:
-        err_placeholder.warning(f"⚠️ '{selected_pitcher}' 데이터 없음")
+        err_area.warning(f"⚠️ '{selected_pitcher}' 데이터 없음")
         return
 
-    err_placeholder.empty()   # 에러 없으면 placeholder 비움
+    err_area.empty()
 
     # ── 헤더 ────────────────────────────────────────────────
     st.markdown(f"""
@@ -262,7 +287,7 @@ def show_main_page():
         <div class="subheader-text">{selected_league} · {selected_team}</div>
     </div>""", unsafe_allow_html=True)
 
-    menu = st.session_state.current_menu
+    menu = st.session_state["current_menu"]
 
     # ════════════════════════════════════════════════════════
     # 메뉴별 콘텐츠
@@ -272,29 +297,22 @@ def show_main_page():
         c1, c2 = st.columns(2)
         with c1:
             st.markdown("**전체**")
-            try:
-                st.dataframe(stats(player_df), use_container_width=True)
-            except Exception:
-                st.error("스탯 오류\n```\n" + tb.format_exc() + "\n```")
+            try:   st.dataframe(stats(player_df), use_container_width=True)
+            except Exception: st.error(tb.format_exc())
         with c2:
             st.markdown("**좌/우 타자별**")
-            try:
-                st.dataframe(season_stand(player_df), use_container_width=True)
-            except Exception:
-                st.error("스탯 오류\n```\n" + tb.format_exc() + "\n```")
+            try:   st.dataframe(season_stand(player_df), use_container_width=True)
+            except Exception: st.error(tb.format_exc())
         st.markdown("**구종별**")
-        try:
-            st.dataframe(season_pitchname(player_df), use_container_width=True)
-        except Exception:
-            st.error("구종별 스탯 오류\n```\n" + tb.format_exc() + "\n```")
+        try:   st.dataframe(season_pitchname(player_df), use_container_width=True)
+        except Exception: st.error(tb.format_exc())
 
     elif menu == "movement":
         st.subheader("🎯 무브먼트 차트")
         try:
             fig = season_movement_chart(movement_dataframe(player_df))
             st.plotly_chart(fig, use_container_width=True)
-        except Exception:
-            st.error("무브먼트 오류\n```\n" + tb.format_exc() + "\n```")
+        except Exception: st.error(tb.format_exc())
 
     elif menu == "location":
         st.subheader("📍 로케이션")
@@ -330,9 +348,9 @@ def show_main_page():
         except Exception: st.error(tb.format_exc())
 
 # ════════════════════════════════════════════════════════════
-# 진입점
+# ✅ 진입점 — 세션 상태로만 분기 (함수 호출 중복 없음)
 # ════════════════════════════════════════════════════════════
-if is_user_logged_in():
+if is_logged_in():
     show_main_page()
 else:
     show_login_page()
