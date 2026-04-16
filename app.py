@@ -881,11 +881,19 @@ def show_main_page():
 # ─────────────────────────────────────────────────────────────────────────────
 # 엔트리포인트
 # ─────────────────────────────────────────────────────────────────────────────
+# with headerSection:
+#     user_id = get_user_id()
+#     if user_id is None:
+#         st.session_state['loggedIn'] = False
+#         show_login_page()
+#     else:
+#         st.session_state['loggedIn'] = True
+#         show_main_page()
+
+# 수정된 코드
 with headerSection:
-    user_id = get_user_id()
-    if user_id is None:
-        st.session_state['loggedIn'] = False
-        show_login_page()
-    else:
-        st.session_state['loggedIn'] = True
+    if is_user_logged_in():
+        show_logout_page()
         show_main_page()
+    else:
+        show_login_page()
