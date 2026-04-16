@@ -1,3 +1,7 @@
-pymysql
-plotly
+streamlit
 pandas
+plotly
+numpy
+pillow
+pyarrow
+openpyxl
