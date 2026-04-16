@@ -333,7 +333,7 @@ def show_main_page():
             for player_info in st.session_state.selected_players:
                 lk  = LEAGUE_LABELS[player_info["League"]]
                 @st.cache_data
-                def _load_cached(lk=lk):
+                def _load_cached(lk):
                     return load_league_data(lk)
                 df_tmp = _load_cached()
                 player_df = df_tmp[df_tmp["pitcher"] == player_info["Player Name"]]
