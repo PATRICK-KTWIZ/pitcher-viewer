@@ -36,21 +36,18 @@ if "loggedIn" not in st.session_state:
 st.markdown("""
 <style>
 /* ── 반응형 브레이크포인트 ─────────────────────────────── */
-/* 태블릿 (768px ~ 1024px) */
 @media (max-width: 1024px) {
-    .header-text   { font-size: 24px !important; }
-    .subheader-text{ font-size: 15px !important; }
+    .header-text    { font-size: 24px !important; }
+    .subheader-text { font-size: 15px !important; }
     [data-testid="stSidebar"] { min-width: 220px !important; max-width: 240px !important; }
     .block-container { padding: 0.5rem 1rem !important; }
 }
-/* 모바일 (~ 767px) */
 @media (max-width: 767px) {
-    .header-text   { font-size: 18px !important; }
-    .subheader-text{ font-size: 13px !important; }
+    .header-text    { font-size: 18px !important; }
+    .subheader-text { font-size: 13px !important; }
     [data-testid="stSidebar"] { min-width: 100% !important; max-width: 100% !important; }
     .block-container { padding: 0.3rem 0.5rem !important; }
-    /* 차트 전체 너비 */
-    .js-plotly-plot { width: 100% !important; }
+    .js-plotly-plot  { width: 100% !important; }
 }
 
 /* ── 전체 배경 ─────────────────────────────────────────── */
@@ -146,27 +143,16 @@ st.markdown("""
     color: #333;
     font-size: 15px;
 }
-
-/* ── 사이드바 리그 배지 ─────────────────────────────────── */
-.league-badge {
-    display: inline-block;
-    background: rgba(255,255,255,0.2);
-    color: #fff;
-    border-radius: 4px;
-    padding: 2px 8px;
-    font-size: 12px;
-    margin-bottom: 6px;
-}
 </style>
 """, unsafe_allow_html=True)
 
 # ════════════════════════════════════════════════════════════
 # 세션 / 헬퍼
 # ════════════════════════════════════════════════════════════
-headerSection  = st.container()
-mainSection    = st.container()
-loginSection   = st.container()
-logOutSection  = st.container()
+headerSection = st.container()
+mainSection   = st.container()
+loginSection  = st.container()
+logOutSection = st.container()
 
 
 def get_user_id():
@@ -221,8 +207,18 @@ def show_login_page():
         st.markdown('<div class="subheader-text">투수 분석페이지에 오신것을 환영합니다.</div>', unsafe_allow_html=True)
         st.markdown('<hr style="margin:0;">', unsafe_allow_html=True)
 
-        userName = st.text_input("-", placeholder="아이디",    label_visibility="collapsed")
-        password = st.text_input("-", placeholder="비밀번호", type="password", label_visibility="collapsed")
+        # ✅ label 에 공백 없이 실제 텍스트를 주고 label_visibility="collapsed" 로 숨김
+        userName = st.text_input(
+            "아이디",
+            placeholder="아이디",
+            label_visibility="collapsed",
+        )
+        password = st.text_input(
+            "비밀번호",
+            placeholder="비밀번호",
+            type="password",
+            label_visibility="collapsed",
+        )
         st.session_state["password"] = password
 
         st.button("로그인", on_click=LoggedIn_Clicked, args=(userName, password))
@@ -232,8 +228,10 @@ def show_login_page():
         with c1:
             st.checkbox("아이디 저장", key="remember_id")
         with c2:
-            st.markdown('<div class="info-text">아이디와 비밀번호를 입력하여 로그인 후 사용해 주세요.</div>',
-                        unsafe_allow_html=True)
+            st.markdown(
+                '<div class="info-text">아이디와 비밀번호를 입력하여 로그인 후 사용해 주세요.</div>',
+                unsafe_allow_html=True,
+            )
 
 # ════════════════════════════════════════════════════════════
 # 메인 페이지
@@ -267,7 +265,6 @@ def show_main_page():
             st.warning("팀 정보를 찾을 수 없습니다.")
             return
 
-        # KT Wiz 기본 선택
         default_team_idx = 0
         for i, t in enumerate(team_list):
             if "KT" in str(t).upper():
@@ -287,8 +284,8 @@ def show_main_page():
             st.warning("해당 팀의 투수 데이터가 없습니다.")
             return
 
-        pitcher_labels  = [p["label"] for p in pitcher_options]
-        pitcher_values  = [p["value"] for p in pitcher_options]
+        pitcher_labels = [p["label"] for p in pitcher_options]
+        pitcher_values = [p["value"] for p in pitcher_options]
 
         selected_pitcher_label = st.selectbox(
             "🧢 투수 선택",
@@ -301,12 +298,12 @@ def show_main_page():
 
         # 5) 메뉴 버튼
         menu_items = [
-            ("📊 시즌 스탯",        "season_stats"),
-            ("🎯 무브먼트 차트",    "movement"),
-            ("📍 로케이션",         "location"),
-            ("🔄 구종 비율",        "pitch_ratio"),
-            ("📈 스윙 분석",        "swing"),
-            ("🎥 투구 트래킹",      "pitch_track"),
+            ("📊 시즌 스탯",     "season_stats"),
+            ("🎯 무브먼트 차트", "movement"),
+            ("📍 로케이션",      "location"),
+            ("🔄 구종 비율",     "pitch_ratio"),
+            ("📈 스윙 분석",     "swing"),
+            ("🎥 투구 트래킹",   "pitch_track"),
         ]
         if "current_menu" not in st.session_state:
             st.session_state.current_menu = "season_stats"
@@ -340,7 +337,6 @@ def show_main_page():
     # 메뉴별 콘텐츠
     # ════════════════════════════════════════════════════════
 
-    # ── 시즌 스탯 ───────────────────────────────────────────
     if menu == "season_stats":
         st.subheader("📊 시즌 스탯")
         col1, col2 = st.columns([1, 1])
@@ -356,14 +352,12 @@ def show_main_page():
                 st.dataframe(season_stand(player_df), use_container_width=True)
             except Exception as e:
                 st.error(f"스탯 계산 오류: {e}")
-
         st.markdown("**구종별**")
         try:
             st.dataframe(season_pitchname(player_df), use_container_width=True)
         except Exception as e:
             st.error(f"구종별 스탯 오류: {e}")
 
-    # ── 무브먼트 차트 ────────────────────────────────────────
     elif menu == "movement":
         st.subheader("🎯 무브먼트 차트")
         try:
@@ -373,7 +367,6 @@ def show_main_page():
         except Exception as e:
             st.error(f"무브먼트 차트 오류: {e}")
 
-    # ── 로케이션 ─────────────────────────────────────────────
     elif menu == "location":
         st.subheader("📍 로케이션")
         tab_r, tab_l = st.tabs(["vs 우타 (R)", "vs 좌타 (L)"])
@@ -388,7 +381,6 @@ def show_main_page():
             except Exception as e:
                 st.error(f"로케이션 오류: {e}")
 
-    # ── 구종 비율 ────────────────────────────────────────────
     elif menu == "pitch_ratio":
         st.subheader("🔄 구종 비율")
         try:
@@ -396,7 +388,6 @@ def show_main_page():
         except Exception as e:
             st.error(f"구종 비율 오류: {e}")
 
-    # ── 스윙 분석 ────────────────────────────────────────────
     elif menu == "swing":
         st.subheader("📈 스윙 분석")
         tab_all, tab_r, tab_l = st.tabs(["전체", "vs 우타 (R)", "vs 좌타 (L)"])
@@ -416,7 +407,6 @@ def show_main_page():
             except Exception as e:
                 st.error(f"스윙 맵 오류: {e}")
 
-    # ── 투구 트래킹 ──────────────────────────────────────────
     elif menu == "pitch_track":
         st.subheader("🎥 투구 트래킹")
         try:
