@@ -1011,4 +1011,144 @@ def show_main_page():
                     else:
                         st.write(f"{pitcher_name}의 {current_year}년 구종 데이터가 없습니다.")
 
-                    st.markdown("""<div style="text-align: left; font-size: 0.9em;"><span style="font-weight: bold;">기호 범례:</span> 
+                    st.markdown("""<div style="text-align: left; font-size: 0.9em;"><span style="font-weight: bold;">기호 범례:</span>
+                        파란색: 콜 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃</div>""", unsafe_allow_html=True)
+                        
+                    st.markdown("""<div style="text-align: left; font-size: 0.9em;"><span style="font-weight: bold;">색상 범례:</span> 
+                        원: 포심 / 삼각형-아래(역삼각형): 투심 / 삼각형-우측아래: 커터 / 삼각형-우측: 슬라이더 / 삼각형-위: 커브 / 다이아몬드: 체인지업 / 사각형: 스플리터 / 십자가: 스위퍼</div>""", unsafe_allow_html=True)
+                    
+                    if len(years) > 1:
+                        with st.expander(f"연도별 현황황: {pitcher_name}"):
+                            for year in years[1:]:
+                                st.subheader(f"{year}년 시즌")
+                                year_df = swing_map_df[swing_map_df['game_year'] == year]
+                                if not year_df.empty:
+                                    available_pitches = year_df['pitch_name'].unique().tolist()
+                                    ordered_pitches = [pitch for pitch in desired_order if pitch in available_pitches]
+                                    create_pitcher_swing_map(year_df, pitcher_name, year, ordered_pitches)
+                                else:
+                                    st.write(f"{pitcher_name}의 {year}년 구종 데이터가 없습니다.")
+                                if year != years[-1]:
+                                    st.markdown("---")
+                    else:
+                        st.write(f"{pitcher_name}의 이전 시즌 데이터가 없습니다.")
+                    st.markdown("---")
+
+# -------------------------------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------------------------------
+
+            st.title('[시즌 :red[최근 5경기 투구표] 현황]')
+
+            for pitcher, pitcher_df in pitcher_dataframes.items():
+                pitch_by_pitch_map_df = pitcher_df
+                pitcher_name = pitcher  # ✅
+                
+                if 'game_date' in pitch_by_pitch_map_df.columns:
+                    pitch_by_pitch_map_df['game_date'] = pd.to_datetime(pitch_by_pitch_map_df['game_date'], errors='coerce')
+                    recent_dates = sorted(pitch_by_pitch_map_df['game_date'].dropna().unique(), reverse=True)[:5]
+                    
+                    if len(recent_dates) > 0:
+                        st.subheader(f"{pitcher_name} - 최근 경기 구종별 로케이션")
+                        
+                        latest_date = recent_dates[0]
+                        latest_game_df = pitch_by_pitch_map_df[pitch_by_pitch_map_df['game_date'] == latest_date]
+                        
+                        if not latest_game_df.empty:
+                            opponent = latest_game_df['batterteam'].iloc[0] if 'batterteam' in latest_game_df.columns else "상대팀 정보 없음"
+                            date_str = str(latest_date).split('T')[0]
+                            st.write(f"### 최신 경기 (날짜: {date_str})")
+                            st.write(f"상대팀: {opponent}")
+                            st.markdown("""<div style="text-align: left; font-size: 0.9em;">
+                                <span style="font-weight: bold;">기호 범례:</span> 
+                                파란색: 콜 스트라이크 / 노란색: 스윙 스트라이크 / 회색: 볼 / 분홍색: 파울 / 빨간색: 안타 / 갈색: 아웃</div>""", unsafe_allow_html=True)
+                            st.markdown("""<div style="text-align: left; font-size: 0.9em;">
+                                <span style="font-weight: bold;">색상 범례:</span> 
+                                원: 포심 / 삼각형-아래(역삼각형): 투심 / 삼각형-우측아래: 커터 / 삼각형-우측: 슬라이더 / 삼각형-위: 커브 / 다이아몬드: 체인지업 / 사각형: 스플리터 / 십자가: 스위퍼</div>""", unsafe_allow_html=True)
+                            
+                            inning_figures = pitch_by_pitch_map(latest_game_df)
+                            
+                            for inning, fig in inning_figures.items():
+                                st.write(f"#### {inning}회")
+                                batter_count = len(latest_game_df[latest_game_df['inning'] == inning].batname.unique())
+                                total_width = batter_count * 300
+                                fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
+                                complete_html = f"""
+                                <div style="width: 100%; height: 600px; border: none; border-radius: 5px; padding: 10px; margin-bottom: 20px; background-color: white;">
+                                    <div style="width: 100%; height: 100%; overflow-x: scroll; overflow-y: hidden; -webkit-overflow-scrolling: touch;">
+                                        <div style="width: {total_width}px; height: 550px;">
+                                            {fig_html}
+                                        </div>
+                                        <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
+                                            ← 좌우로 스크롤하여 더 보기 →
+                                        </div>
+                                    </div>
+                                </div>
+                                """
+                                html(complete_html, height=520)
+                        else:
+                            st.write(f"{pitcher_name}의 최근 경기 데이터가 없습니다.")
+                        
+                        if len(recent_dates) > 1:
+                            for game_date in recent_dates[1:]:
+                                game_df = pitch_by_pitch_map_df[pitch_by_pitch_map_df['game_date'] == game_date]
+                                if not game_df.empty:
+                                    opponent = game_df['batterteam'].iloc[0] if 'batterteam' in game_df.columns else "상대팀 정보 없음"
+                                    date_str = str(game_date).split('T')[0]
+                                    with st.expander(f"경기 날짜: {date_str} (상대팀: {opponent})"):
+                                        inning_figures = pitch_by_pitch_map(game_df)
+                                        for inning, fig in inning_figures.items():
+                                            st.write(f"#### {inning}회")
+                                            batter_count = len(game_df[game_df['inning'] == inning].batname.unique())
+                                            total_width = batter_count * 300
+                                            fig_html = pio.to_html(fig, full_html=False, include_plotlyjs='cdn', config={'displayModeBar': False})
+                                            complete_html = f"""
+                                            <div style="width: 100%; height: 600px; border: none; border-radius: 5px; padding: 10px; margin-bottom: 20px; background-color: white;">
+                                                <div style="width: 100%; height: 100%; overflow-x: scroll; overflow-y: hidden; -webkit-overflow-scrolling: touch;">
+                                                    <div style="width: {total_width}px; height: 550px;">
+                                                        {fig_html}
+                                                    </div>
+                                                    <div style="text-align: center; margin-top: 5px; color: #555; font-size: 0.8em;">
+                                                        ← 좌우로 스크롤하여 더 보기 →
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            """
+                                            html(complete_html, height=450)
+                                else:
+                                    date_str = str(game_date).split('T')[0]
+                                    with st.expander(f"경기 날짜: {date_str}"):
+                                        st.write(f"{pitcher_name}의 해당 경기 데이터가 없습니다.")
+                        else:
+                            st.write(f"{pitcher_name}의 이전 경기 데이터가 없습니다.")
+                        
+                        st.markdown("---")
+                    else:
+                        st.write(f"{pitcher_name}의 경기 데이터가 없습니다.")
+                else:
+                    st.error(f"{pitcher_name}의 데이터에 game_date 컬럼이 없습니다.")
+
+
+# ════════════════════════════════════════════════════════════
+# 진입점 (원본 100% 유지)
+# ════════════════════════════════════════════════════════════
+with headerSection:
+    user_id = get_user_id()
+
+    if user_id is None:
+        st.session_state['loggedIn'] = False
+        show_login_page()
+    else:
+        st.session_state['loggedIn'] = True
+        show_main_page()
+
+
+
+
+
+
+
+
+
+
+
+                    
